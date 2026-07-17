@@ -90,7 +90,16 @@ Every failure returns `{code, message, hint}`. Example: `ANCHOR_MISMATCH` includ
 
 1. **Golden-file round-trips** (office-core): fixture corpus of real-world docx/pptx (styled corporate docs, tracked changes, embedded images, non-Latin text). Each edit op asserts (a) the edit landed and (b) nothing else changed — byte-level OOXML diff of untouched parts. Fidelity regression is the primary failure mode; it is tested directly.
 2. **Render-based visual checks**: after create/edit, render and compare to reference PNGs via perceptual hash — catches "valid XML, broken layout" bugs invisible to XML diffs.
-3. **Agent-level eval battery** (designed now, built later): task cards (e.g. "change Q3 to Q4 across this deck and update the title-slide date") run through OpenCode with a frontier model and a local model, scored on task success + file fidelity. Directly measures the small-model-floor claim; compatible with the existing repair-parity harness style.
+3. **Agent-level eval battery** (v1 deliverable — it feeds the published model benchmark below): task cards (e.g. "change Q3 to Q4 across this deck and update the title-slide date") run through OpenCode, scored on task success + file fidelity. Directly measures the small-model-floor claim; compatible with the existing repair-parity harness style.
+
+## Published model benchmark
+
+Users choose their model from a results table we ship — no user-runnable bench tooling in v1.
+
+- **Roster:** frontier models (Claude, GPT-class) plus popular local models (Ollama: Qwen, Llama, and similar in the ~7–70B range at common quantizations).
+- **Method:** the agent-level eval battery above, run per model through stock OpenCode with the plugin installed. Scored on task success rate and file fidelity (no collateral damage to untouched content). Local runs follow the standing parallel-benchmark rule: parallel by default after a memory-fit check.
+- **Publication:** a table in the README/docs — model, quantization, task success, fidelity, notes — with the benchmark hardware disclosed and an explicit caveat that local-model results vary with hardware and quantization.
+- **Refresh policy:** re-run and update the table when the tool surface changes in a way that invalidates scores (new ops, changed error shapes), not on a calendar.
 
 ## Out of scope (v1)
 
@@ -98,9 +107,11 @@ Every failure returns `{code, message, hint}`. Example: `ANCHOR_MISMATCH` includ
 - Authoring tracked changes / comments (reading them is in scope via `office_read` full mode).
 - MCP server binding (kept cheap by the core/binding split; not built now).
 - Rendering-dependent features beyond PNG previews (no PDF export in v1).
+- User-runnable benchmark CLI (deliberately excluded from v1; users select from the published table. Candidate for v2 if hardware variance makes shipped scores misleading in practice).
 
 ## Success criteria
 
 - All five tools work end-to-end on the fixture corpus with zero fidelity regressions.
 - A local ~30B model can complete representative edit tasks using only the typed tools.
 - One-command install into stock OpenCode; first-run provisioning completes without manual steps on a machine with Python; absence of Python/LibreOffice produces the specified actionable errors.
+- The published benchmark table covers the full roster (frontier + local) with task-success and fidelity scores, so a user can pick a model for Office work without running anything themselves.
