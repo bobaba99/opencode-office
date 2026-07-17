@@ -10,3 +10,7 @@ Task 4: complete (commits 5e13cf3..853ea01 incl. hint+pycache fix, re-review cle
   Minor (deferred): _worker.py PYTHON_EXCEPTION hint generic; timedOut flag race at exact timeoutMs boundary; long template-literal throw lines.
 Task 5: complete (commits 853ea01..02eb539, review clean)
   Minor (deferred): fixtures.ts pipes stdout without draining (fine while gen script prints one line).
+Task 7: complete (commits d3a0deb..6b54831, review clean)
+  Minor (deferred): no FILE_OPEN test (docx or pptx); shape-level target returns whole slide (note for Plan 2 edit ops).
+All 7 tasks complete — final whole-branch review next.
+Final review: With fixes -> one fix commit 290ce9e (typecheck wiring incl. skipLibCheck for bun-types/@types/node skew, parseId target validation in both readers, outline+target bypass, FILE_OPEN/BAD_ID/outline-target tests; 24/24, tsc clean). Riding to Plan 2 per triage: venv lock, win32 finish-or-declare, ID grammar contract test, SIGKILL escalation, stdin EPIPE wrap, Bun.which, WORKER_CRASH/PROTOCOL tests.
