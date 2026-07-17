@@ -1,8 +1,12 @@
+import io
 import os
 import sys
 
 from docx import Document
+from docx.oxml.ns import qn
 from pptx import Presentation
+from pptx.util import Inches
+from PIL import Image as PILImage
 
 
 def make_docx(path):
@@ -32,9 +36,59 @@ def make_pptx(path):
     prs.save(path)
 
 
+def make_edit_docx(path):
+    doc = Document()
+    doc.add_heading("Edit Playground", level=1)
+    p = doc.add_paragraph("Growth was ")
+    strong = p.add_run("strong")
+    strong.bold = True
+    p.add_run(" this quarter overall.")
+    doc.add_paragraph("Delete me entirely.")
+    doc.add_paragraph("Style me.")
+    table = doc.add_table(rows=2, cols=2)
+    table.cell(0, 0).text = "K"
+    table.cell(0, 1).text = "V"
+    table.cell(1, 0).text = "alpha"
+    table.cell(1, 1).text = "one"
+    tracked = doc.add_paragraph("Reviewed text ")
+    ins = tracked._p.makeelement(
+        qn("w:ins"), {qn("w:id"): "1", qn("w:author"): "Fixture", qn("w:date"): "2026-01-01T00:00:00Z"}
+    )
+    run_el = tracked._p.makeelement(qn("w:r"), {})
+    text_el = tracked._p.makeelement(qn("w:t"), {})
+    text_el.text = "with tracked insertion"
+    run_el.append(text_el)
+    ins.append(run_el)
+    tracked._p.append(ins)
+    doc.save(path)
+
+
+def make_edit_pptx(path):
+    prs = Presentation()
+    s1 = prs.slides.add_slide(prs.slide_layouts[0])
+    s1.shapes.title.text = "Edit Deck"
+    s1.placeholders[1].text = "v1"
+    s2 = prs.slides.add_slide(prs.slide_layouts[1])
+    s2.shapes.title.text = "Points"
+    s2.placeholders[1].text = "First point\nSecond point"
+    buf = io.BytesIO()
+    PILImage.new("RGB", (64, 64), (200, 30, 30)).save(buf, format="PNG")
+    buf.seek(0)
+    s3 = prs.slides.add_slide(prs.slide_layouts[6])
+    s3.shapes.add_picture(buf, Inches(1), Inches(1))
+    prs.save(path)
+
+
+def make_png(path, color, size):
+    PILImage.new("RGB", size, color).save(path)
+
+
 if __name__ == "__main__":
     out = sys.argv[1]
     os.makedirs(out, exist_ok=True)
     make_docx(os.path.join(out, "report.docx"))
     make_pptx(os.path.join(out, "deck.pptx"))
+    make_edit_docx(os.path.join(out, "edit-report.docx"))
+    make_edit_pptx(os.path.join(out, "edit-deck.pptx"))
+    make_png(os.path.join(out, "swap.png"), (30, 30, 200), (32, 32))
     print("ok")
