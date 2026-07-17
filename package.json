@@ -1,0 +1,5 @@
+{
+  "name": "opencode-office",
+  "private": true,
+  "workspaces": ["packages/*"]
+}

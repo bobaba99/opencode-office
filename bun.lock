@@ -1,0 +1,16 @@
+{
+  "lockfileVersion": 1,
+  "configVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "opencode-office",
+    },
+    "packages/office-core": {
+      "name": "@opencode-office/core",
+      "version": "0.0.1",
+    },
+  },
+  "packages": {
+    "@opencode-office/core": ["@opencode-office/core@workspace:packages/office-core"],
+  }
+}
