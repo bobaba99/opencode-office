@@ -1,3 +1,4 @@
 node_modules/
 packages/office-core/test/.fixtures/
 .cache/
+__pycache__/

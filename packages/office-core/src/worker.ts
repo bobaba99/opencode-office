@@ -42,12 +42,12 @@ export async function runWorker<T>(
       "Large documents can be slow; retry with a narrower target, or raise timeoutMs.",
     )
   if (code !== 0)
-    throw new OfficeError("WORKER_CRASH", `${script} exited with code ${code}`, (stderr || "no stderr").slice(0, 2000))
+    throw new OfficeError("WORKER_CRASH", `${script} exited with code ${code}`, `Re-run once; if it recurs, the worker script has a bug — report it. stderr: ${(stderr || "none").slice(0, 1500)}`)
   let parsed: WorkerEnvelope<T>
   try {
     parsed = JSON.parse(stdout)
   } catch {
-    throw new OfficeError("WORKER_PROTOCOL", `${script} returned non-JSON output`, stdout.slice(0, 500))
+    throw new OfficeError("WORKER_PROTOCOL", `${script} returned non-JSON output`, `The worker printed non-JSON to stdout — check for stray print()/debug output in the script. stdout: ${stdout.slice(0, 400)}`)
   }
   if (!parsed.ok || parsed.error) {
     const err = parsed.error ?? { code: "WORKER_PROTOCOL", message: "worker returned ok=false without error", hint: "Bug in worker script." }
