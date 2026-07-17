@@ -1,3 +1,5 @@
+import { OfficeError } from "../errors"
+import { parseId } from "../ids"
 import { runWorker } from "../worker"
 
 export type PptxShape = { id: string; name: string; text: string }
@@ -10,6 +12,15 @@ export async function readPptx(
   target?: string,
   opts?: { cacheDir?: string },
 ): Promise<PptxRead> {
+  if (target !== undefined) {
+    const ref = parseId(target)
+    if (ref.kind !== "slide" && ref.kind !== "shape")
+      throw new OfficeError(
+        "BAD_ID",
+        `Target ${target} is not a pptx element ID`,
+        "pptx targets use s:<n> or s:<n>/sh:<m> — get IDs from office_read output for this file.",
+      )
+  }
   return runWorker<PptxRead>("pptx_read.py", { file, mode, target }, opts)
 }
 

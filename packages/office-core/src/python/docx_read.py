@@ -32,7 +32,7 @@ def main(payload):
             continue
         if prefix == "p":
             style = el.style.name if el.style is not None else "Normal"
-            if mode == "outline" and not style.startswith("Heading"):
+            if mode == "outline" and not target and not style.startswith("Heading"):
                 continue
             elements.append({"id": el_id, "type": "paragraph", "style": style, "text": el.text})
         else:

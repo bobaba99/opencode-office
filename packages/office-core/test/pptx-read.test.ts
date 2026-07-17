@@ -41,3 +41,21 @@ test("unknown slide raises TARGET_NOT_FOUND", async () => {
     expect((e as OfficeError).code).toBe("TARGET_NOT_FOUND")
   }
 })
+
+test("nonexistent file raises FILE_OPEN", async () => {
+  try {
+    await readPptx(path.join(FIXTURE_DIR, "missing.pptx"), "content")
+    expect.unreachable()
+  } catch (e) {
+    expect((e as OfficeError).code).toBe("FILE_OPEN")
+  }
+})
+
+test("docx-style target is rejected client-side with BAD_ID", async () => {
+  try {
+    await readPptx(DECK(), "content", "p:0")
+    expect.unreachable()
+  } catch (e) {
+    expect((e as OfficeError).code).toBe("BAD_ID")
+  }
+})

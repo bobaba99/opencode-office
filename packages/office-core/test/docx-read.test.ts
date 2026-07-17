@@ -50,3 +50,29 @@ test("unknown target raises TARGET_NOT_FOUND", async () => {
     expect((e as OfficeError).code).toBe("TARGET_NOT_FOUND")
   }
 })
+
+test("nonexistent file raises FILE_OPEN", async () => {
+  try {
+    await readDocx(path.join(FIXTURE_DIR, "missing.docx"), "content")
+    expect.unreachable()
+  } catch (e) {
+    expect((e as OfficeError).code).toBe("FILE_OPEN")
+  }
+})
+
+test("pptx-style target is rejected client-side with BAD_ID", async () => {
+  try {
+    await readDocx(REPORT(), "content", "s:0")
+    expect.unreachable()
+  } catch (e) {
+    expect((e as OfficeError).code).toBe("BAD_ID")
+  }
+})
+
+test("outline mode still returns a targeted non-heading element", async () => {
+  const all = await readDocx(REPORT(), "content")
+  const bodyPara = all.elements.find((e) => e.type === "paragraph" && !e.style.startsWith("Heading"))!
+  const out = await readDocx(REPORT(), "outline", bodyPara.id)
+  expect(out.elements).toHaveLength(1)
+  expect(out.elements[0].id).toBe(bodyPara.id)
+})
