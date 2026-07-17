@@ -6,3 +6,5 @@ Task 2: complete (commits fa4d1b9..8ed217c, review clean)
 Task 3: complete (commits 8ed217c..5e13cf3 incl. hint fix, re-review clean)
   Decision: plan-mandated stderr-as-hint finding fixed without user escalation — Global Constraints ("hints state recovery path") govern over example code by the plan's own terms.
   Minor (deferred): ensureVenv cold-cache race; version check after venv creation leaves fingerprint-less dir on PYTHON_TOO_OLD; PYTHON_TOO_OLD reuses PYTHON_MISSING message text; long throw lines may rewrap under Prettier.
+Task 4: complete (commits 5e13cf3..853ea01 incl. hint+pycache fix, re-review clean)
+  Minor (deferred): _worker.py PYTHON_EXCEPTION hint generic; timedOut flag race at exact timeoutMs boundary; long template-literal throw lines.
