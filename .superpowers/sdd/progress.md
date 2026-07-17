@@ -8,3 +8,5 @@ Task 3: complete (commits 8ed217c..5e13cf3 incl. hint fix, re-review clean)
   Minor (deferred): ensureVenv cold-cache race; version check after venv creation leaves fingerprint-less dir on PYTHON_TOO_OLD; PYTHON_TOO_OLD reuses PYTHON_MISSING message text; long throw lines may rewrap under Prettier.
 Task 4: complete (commits 5e13cf3..853ea01 incl. hint+pycache fix, re-review clean)
   Minor (deferred): _worker.py PYTHON_EXCEPTION hint generic; timedOut flag race at exact timeoutMs boundary; long template-literal throw lines.
+Task 5: complete (commits 853ea01..02eb539, review clean)
+  Minor (deferred): fixtures.ts pipes stdout without draining (fine while gen script prints one line).
