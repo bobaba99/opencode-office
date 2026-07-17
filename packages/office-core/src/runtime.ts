@@ -63,19 +63,19 @@ export async function ensureVenv(cacheDir = defaultCacheDir()): Promise<string> 
   if (await which("uv")) {
     const created = await run(["uv", "venv", venvDir])
     if (created.code !== 0)
-      throw new OfficeError("VENV_CREATE", "uv could not create the Office tools venv", created.stderr.slice(0, 500))
+      throw new OfficeError("VENV_CREATE", "uv could not create the Office tools venv", `Retry once; if it persists, update uv (\`uv self update\`) and check disk space. stderr: ${created.stderr.slice(0, 400)}`)
     await checkVersion(python)
     const installed = await run(["uv", "pip", "install", "--python", python, ...pkgs])
     if (installed.code !== 0)
-      throw new OfficeError("VENV_INSTALL", "Failed to install pinned Office python packages", installed.stderr.slice(0, 500))
+      throw new OfficeError("VENV_INSTALL", "Failed to install pinned Office python packages", `Check network access to PyPI and retry; if it persists, delete ~/.cache/opencode-office/venv and retry. stderr: ${installed.stderr.slice(0, 400)}`)
   } else if (await which("python3")) {
     const created = await run(["python3", "-m", "venv", venvDir])
     if (created.code !== 0)
-      throw new OfficeError("VENV_CREATE", "python3 -m venv failed", created.stderr.slice(0, 500))
+      throw new OfficeError("VENV_CREATE", "python3 -m venv failed", `Ensure the venv module is available (Debian/Ubuntu: \`apt install python3-venv\`) and retry. stderr: ${created.stderr.slice(0, 400)}`)
     await checkVersion(python)
     const installed = await run([python, "-m", "pip", "install", "--quiet", ...pkgs])
     if (installed.code !== 0)
-      throw new OfficeError("VENV_INSTALL", "Failed to install pinned Office python packages", installed.stderr.slice(0, 500))
+      throw new OfficeError("VENV_INSTALL", "Failed to install pinned Office python packages", `Check network access to PyPI and retry; if it persists, delete ~/.cache/opencode-office/venv and retry. stderr: ${installed.stderr.slice(0, 400)}`)
   } else {
     throw new OfficeError(
       "PYTHON_MISSING",
