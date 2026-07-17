@@ -1,0 +1,12 @@
+{
+  "name": "opencode-office",
+  "private": true,
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.14",
+    "typescript": "^7.0.2"
+  }
+}
