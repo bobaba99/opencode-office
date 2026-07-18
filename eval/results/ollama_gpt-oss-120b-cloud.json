@@ -17,12 +17,10 @@
       "seconds": 17.342
     },
     "docx-table": {
-      "success": false,
+      "success": true,
       "fidelity": true,
-      "notes": [
-        "cell(1,1) is \"$4.2M\", expected \"$5.1M\""
-      ],
-      "seconds": 4.978
+      "notes": [],
+      "seconds": 44.741
     },
     "docx-create": {
       "success": true,
@@ -44,19 +42,19 @@
     },
     "pptx-image": {
       "success": false,
-      "fidelity": false,
+      "fidelity": true,
       "notes": [
-        "timeout"
+        "s:3/sh:0 sha mismatch: got 2fad5d417b4037a4bca18925099cf7a8850ae6bd5db1ef82cf22ed45c768b440, expected 96ba6cc8dd122bb6a1269511a2c4276ea6e79ff5fc31622f30ded2b33cbd4413"
       ],
-      "seconds": 300.018
+      "seconds": 78.291
     },
     "pptx-create": {
       "success": false,
-      "fidelity": false,
+      "fidelity": true,
       "notes": [
-        "timeout"
+        "could not read /tmp/office-eval/pptx-create-1784350702155-005c96a5/plan.pptx: Could not open /tmp/office-eval/pptx-create-1784350702155-005c96a5/plan.pptx as .pptx: Package not found at '/tmp/office-eval/pptx-create-1784350702155-005c96a5/plan.pptx'"
       ],
-      "seconds": 300.022
+      "seconds": 8.375
     }
   }
 }

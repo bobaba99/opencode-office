@@ -24,9 +24,9 @@
       "success": false,
       "fidelity": true,
       "notes": [
-        "could not read /tmp/office-eval/docx-create-1784349365350-ff25f045/summary.docx: Could not open /tmp/office-eval/docx-create-1784349365350-ff25f045/summary.docx as .docx: Package not found at '/tmp/office-eval/docx-create-1784349365350-ff25f045/summary.docx'"
+        "could not read /tmp/office-eval/docx-create-1784350549191-011f5ecc/summary.docx: Could not open /tmp/office-eval/docx-create-1784350549191-011f5ecc/summary.docx as .docx: Package not found at '/tmp/office-eval/docx-create-1784350549191-011f5ecc/summary.docx'"
       ],
-      "seconds": 5.018
+      "seconds": 6.863
     },
     "pptx-retitle": {
       "success": true,
@@ -36,27 +36,26 @@
     },
     "pptx-insert": {
       "success": false,
-      "fidelity": false,
+      "fidelity": true,
       "notes": [
-        "timeout"
+        "slide 1 layout/body mismatch: layout=Title and Content body=\"Agenda\\nitem\""
       ],
-      "seconds": 300.015
+      "seconds": 22.119
     },
     "pptx-image": {
       "success": false,
-      "fidelity": false,
+      "fidelity": true,
       "notes": [
-        "timeout"
+        "expected 4 slides, got 3",
+        "s:3/sh:0 sha mismatch: got undefined, expected 96ba6cc8dd122bb6a1269511a2c4276ea6e79ff5fc31622f30ded2b33cbd4413"
       ],
-      "seconds": 300.019
+      "seconds": 10.297
     },
     "pptx-create": {
-      "success": false,
-      "fidelity": false,
-      "notes": [
-        "timeout"
-      ],
-      "seconds": 300.011
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 19.776
     }
   }
 }
