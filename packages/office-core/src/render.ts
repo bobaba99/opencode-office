@@ -3,7 +3,7 @@ import { mkdir, mkdtemp, rm } from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
 import { OfficeError } from "./errors"
-import { defaultCacheDir, findSoffice } from "./runtime"
+import { acquireLock, defaultCacheDir, findSoffice } from "./runtime"
 import { runWorker } from "./worker"
 
 export type RenderResult = { pages: Array<{ page: number; path: string; width: number; height: number }> }
@@ -53,19 +53,29 @@ export async function renderOffice(
 
   const tmpDir = await mkdtemp(path.join(os.tmpdir(), "opencode-office-render-"))
   try {
-    const { code, stderr } = await convertToPdf(soffice, file, profileDir, tmpDir, timeoutMs)
+    // soffice conversions against the same UserInstallation profile dir corrupt each
+    // other when run concurrently (the second call exits 0 but produces no output) —
+    // serialize just the soffice invocation through the profile-dir lock; the pymupdf
+    // rasterization worker below runs outside it since it doesn't touch the profile.
+    const release = await acquireLock(profileDir, { timeoutMs: 180_000 })
+    let code: number, stderr: string
+    try {
+      ;({ code, stderr } = await convertToPdf(soffice, file, profileDir, tmpDir, timeoutMs))
+    } finally {
+      await release()
+    }
     const base = path.basename(file, path.extname(file))
     const pdfPath = path.join(tmpDir, `${base}.pdf`)
     if (code !== 0 || !existsSync(pdfPath)) {
       const message =
         code === 0
-          ? `soffice exited 0 but produced no output converting ${file} to pdf — another process may be holding the render profile`
+          ? `soffice exited 0 but produced no output converting ${file} to pdf`
           : `soffice failed to convert ${file} to pdf (exit ${code})`
-      throw new OfficeError(
-        "RENDER_FAILED",
-        message,
-        `Retry once — LibreOffice can flake on first run; if it persists, confirm the file opens in LibreOffice directly. stderr: ${(stderr || "none").slice(-1500)}`,
-      )
+      const hint =
+        code === 0
+          ? `Retry once — LibreOffice can flake on first run. Renders are serialized through a provisioning lock, so profile contention shouldn't cause this anymore; if it persists, check for a stale lock dir at ${profileDir}.lock or confirm the file opens in LibreOffice directly. stderr: ${(stderr || "none").slice(-1500)}`
+          : `Retry once — LibreOffice can flake on first run; if it persists, confirm the file opens in LibreOffice directly. stderr: ${(stderr || "none").slice(-1500)}`
+      throw new OfficeError("RENDER_FAILED", message, hint)
     }
 
     const outDir = opts?.outDir ?? path.join(cacheDir, "renders", base)
