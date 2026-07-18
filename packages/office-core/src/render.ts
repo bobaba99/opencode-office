@@ -57,7 +57,7 @@ export async function renderOffice(
     // other when run concurrently (the second call exits 0 but produces no output) —
     // serialize just the soffice invocation through the profile-dir lock; the pymupdf
     // rasterization worker below runs outside it since it doesn't touch the profile.
-    const release = await acquireLock(profileDir, { timeoutMs: 180_000 })
+    const release = await acquireLock(profileDir, { timeoutMs: Math.max(180_000, timeoutMs * 3 + 30_000) })
     let code: number, stderr: string
     try {
       ;({ code, stderr } = await convertToPdf(soffice, file, profileDir, tmpDir, timeoutMs))

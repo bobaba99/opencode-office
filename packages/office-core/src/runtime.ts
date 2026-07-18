@@ -86,18 +86,25 @@ export async function acquireLock(
         await rm(lockDir, { recursive: true, force: true })
       }
     } catch {
+      let lockAge: number | null = null
       try {
-        const age = Date.now() - (await stat(lockDir)).mtimeMs
-        if (age > staleMs) await rm(lockDir, { recursive: true, force: true })
+        lockAge = Date.now() - (await stat(lockDir)).mtimeMs
+        if (lockAge > staleMs) await rm(lockDir, { recursive: true, force: true })
       } catch {
         // lock vanished or is unreadable; fall through to deadline + sleep, then retry
       }
-      if (Date.now() > deadline)
+      if (Date.now() > deadline) {
+        const ageStr = lockAge !== null ? `${Math.round(lockAge / 1000)}s old` : "unknown age"
+        const hint =
+          lockAge !== null && lockAge > staleMs
+            ? `Lock at ${lockDir} looks stale (${Math.round(lockAge / 1000)}s old); remove it with: rm -rf ${lockDir}`
+            : `Another operation holds the lock at ${lockDir} (age ${ageStr}). It appears active — wait and retry; only remove the directory if no opencode/office process is running.`
         throw new OfficeError(
           "LOCK_TIMEOUT",
-          `Another process holds the Office provisioning lock at ${lockDir}`,
-          `Wait for the other provisioning to finish, or remove the stale directory: rm -rf ${lockDir}`,
+          `Timed out waiting for the office lock at ${lockDir}`,
+          hint,
         )
+      }
       await new Promise((resolve) => setTimeout(resolve, 250))
     }
   }
