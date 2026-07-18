@@ -1,0 +1,62 @@
+{
+  "model": "ollama/minimax-m3:cloud",
+  "startedAt": "2026-07-18T04:34:42.207Z",
+  "cards": {
+    "docx-replace": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 21.184
+    },
+    "docx-insert": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 18.593
+    },
+    "docx-table": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 37.273
+    },
+    "docx-create": {
+      "success": false,
+      "fidelity": true,
+      "notes": [
+        "could not read /tmp/office-eval/docx-create-1784349365350-ff25f045/summary.docx: Could not open /tmp/office-eval/docx-create-1784349365350-ff25f045/summary.docx as .docx: Package not found at '/tmp/office-eval/docx-create-1784349365350-ff25f045/summary.docx'"
+      ],
+      "seconds": 5.018
+    },
+    "pptx-retitle": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 10.92
+    },
+    "pptx-insert": {
+      "success": false,
+      "fidelity": false,
+      "notes": [
+        "timeout"
+      ],
+      "seconds": 300.015
+    },
+    "pptx-image": {
+      "success": false,
+      "fidelity": false,
+      "notes": [
+        "timeout"
+      ],
+      "seconds": 300.019
+    },
+    "pptx-create": {
+      "success": false,
+      "fidelity": false,
+      "notes": [
+        "timeout"
+      ],
+      "seconds": 300.011
+    }
+  }
+}

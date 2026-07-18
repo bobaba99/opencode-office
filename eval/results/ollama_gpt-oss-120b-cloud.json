@@ -1,0 +1,62 @@
+{
+  "model": "ollama/gpt-oss:120b-cloud",
+  "startedAt": "2026-07-18T04:34:45.364Z",
+  "cards": {
+    "docx-replace": {
+      "success": true,
+      "fidelity": false,
+      "notes": [
+        "comment_refs expected 1, got 0"
+      ],
+      "seconds": 23.315
+    },
+    "docx-insert": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 17.342
+    },
+    "docx-table": {
+      "success": false,
+      "fidelity": true,
+      "notes": [
+        "cell(1,1) is \"$4.2M\", expected \"$5.1M\""
+      ],
+      "seconds": 4.978
+    },
+    "docx-create": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 9.41
+    },
+    "pptx-retitle": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 28.495
+    },
+    "pptx-insert": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 19.145
+    },
+    "pptx-image": {
+      "success": false,
+      "fidelity": false,
+      "notes": [
+        "timeout"
+      ],
+      "seconds": 300.018
+    },
+    "pptx-create": {
+      "success": false,
+      "fidelity": false,
+      "notes": [
+        "timeout"
+      ],
+      "seconds": 300.022
+    }
+  }
+}

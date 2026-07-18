@@ -1,0 +1,14 @@
+{
+  "model": "ollama/llama3.1:8b",
+  "startedAt": "2026-07-18T04:23:02.108Z",
+  "cards": {
+    "docx-replace": {
+      "success": false,
+      "fidelity": true,
+      "notes": [
+        "expected \"Growth was robust this quarter overall.\", found \"Growth was strong this quarter overall.\""
+      ],
+      "seconds": 33.802
+    }
+  }
+}

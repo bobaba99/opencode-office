@@ -1,0 +1,57 @@
+{
+  "model": "zai/glm-4.5-flash",
+  "startedAt": "2026-07-18T04:17:48.301Z",
+  "cards": {
+    "docx-replace": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 50.305
+    },
+    "docx-insert": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 64.113
+    },
+    "docx-table": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 55.193
+    },
+    "docx-create": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 20.544
+    },
+    "pptx-retitle": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 55.704
+    },
+    "pptx-insert": {
+      "success": false,
+      "fidelity": false,
+      "notes": [
+        "outline mismatch: [\"Q3 Review\",\"Highlights\",\"Agenda\"]",
+        "last slide shapes changed: [\"Agenda\",\"Numbers\\nRisks\"]"
+      ],
+      "seconds": 128.895
+    },
+    "pptx-image": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 61.515
+    },
+    "pptx-create": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 108.933
+    }
+  }
+}
