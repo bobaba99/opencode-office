@@ -84,7 +84,9 @@ test("full mode surfaces tracked insertions; content mode does not", async () =>
     (e) => e.type === "paragraph" && (e.tracked_insertions?.length ?? 0) > 0,
   )!
   expect(tracked.type === "paragraph" && tracked.tracked_insertions).toEqual(["with tracked insertion"])
+  expect(tracked.type === "paragraph" && tracked.tracked_deletions).toEqual(["obsolete text"])
   expect(formatDocxRead(full)).toContain("tracked insertion:")
+  expect(formatDocxRead(full)).toContain("tracked deletion:")
   const content = await readDocx(EDIT, "content")
   for (const el of content.elements) {
     expect(el.type === "paragraph" ? (el as { tracked_insertions?: string[] }).tracked_insertions : undefined).toBeUndefined()

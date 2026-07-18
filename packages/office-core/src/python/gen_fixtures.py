@@ -60,6 +60,15 @@ def make_edit_docx(path):
     run_el.append(text_el)
     ins.append(run_el)
     tracked._p.append(ins)
+    dele = tracked._p.makeelement(
+        qn("w:del"), {qn("w:id"): "2", qn("w:author"): "Fixture", qn("w:date"): "2026-01-01T00:00:00Z"}
+    )
+    del_run = tracked._p.makeelement(qn("w:r"), {})
+    del_text = tracked._p.makeelement(qn("w:delText"), {})
+    del_text.text = "obsolete text"
+    del_run.append(del_text)
+    dele.append(del_run)
+    tracked._p.append(dele)
     doc.save(path)
 
 
