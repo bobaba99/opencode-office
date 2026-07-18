@@ -3,3 +3,4 @@ packages/office-core/test/.fixtures/
 .cache/
 __pycache__/
 .superpowers/
+.DS_Store
