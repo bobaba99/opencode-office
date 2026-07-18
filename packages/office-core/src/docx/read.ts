@@ -3,14 +3,14 @@ import { parseId } from "../ids"
 import { runWorker } from "../worker"
 
 export type DocxElement =
-  | { id: string; type: "paragraph"; style: string; text: string }
+  | { id: string; type: "paragraph"; style: string; text: string; tracked_insertions?: string[]; tracked_deletions?: string[] }
   | { id: string; type: "table"; rows: number; cols: number; text?: string }
 
 export type DocxRead = { format: "docx"; mode: string; elements: DocxElement[] }
 
 export async function readDocx(
   file: string,
-  mode: "outline" | "content",
+  mode: "outline" | "content" | "full",
   target?: string,
   opts?: { cacheDir?: string },
 ): Promise<DocxRead> {
@@ -30,7 +30,9 @@ export function formatDocxRead(result: DocxRead): string {
   return result.elements
     .map((el) =>
       el.type === "paragraph"
-        ? `[${el.id}] (${el.style}) ${el.text}`
+        ? `[${el.id}] (${el.style}) ${el.text}` +
+          (el.tracked_insertions ?? []).map((t) => `\n  tracked insertion: ${JSON.stringify(t)}`).join("") +
+          (el.tracked_deletions ?? []).map((t) => `\n  tracked deletion: ${JSON.stringify(t)}`).join("")
         : `[${el.id}] (table ${el.rows}x${el.cols})${el.text ? "\n" + el.text : ""}`,
     )
     .join("\n")
