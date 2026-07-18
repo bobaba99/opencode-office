@@ -1,5 +1,5 @@
 {
-  "name": "@opencode-office/core",
+  "name": "opencode-office-core",
   "version": "0.1.0",
   "description": "Read, edit, create, and render .docx/.pptx files (python-docx / python-pptx / LibreOffice under the hood). TypeScript source, executed directly by Bun/opencode \u2014 not a compiled Node package.",
   "license": "MIT",

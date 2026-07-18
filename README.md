@@ -17,9 +17,9 @@ them well:
   reads: outline-first reads, anchored edits, and the full operations catalog for the tools
   above.
 
-The tools are built on `@opencode-office/core`, which drives `python-docx` / `python-pptx` /
+The tools are built on `opencode-office-core`, which drives `python-docx` / `python-pptx` /
 `pillow` / `pymupdf` in a managed Python venv, plus LibreOffice (`soffice`) for rendering.
-`@opencode-office/core` ships as TypeScript source (its `exports` map points straight at
+`opencode-office-core` ships as TypeScript source (its `exports` map points straight at
 `.ts` files, no build step) — consumers must be able to execute TypeScript directly, as
 opencode and Bun do. Plain Node.js consumers are not supported for now.
 
@@ -92,7 +92,7 @@ This table is copied by hand from `docs/BENCHMARK.md`, which is regenerated with
 
 ## Releasing
 
-Publish `@opencode-office/core` before `opencode-plugin-office` — the plugin depends on it via
+Publish `opencode-office-core` before `opencode-plugin-office` — the plugin depends on it via
 `workspace:*`, which npm rewrites to a concrete version range at publish time; publishing the
 plugin first would ship a dependency range the registry can't yet resolve. After bumping
 versions, run `bun install` so the workspace rewrite is reflected in a fresh `bun.lock` before

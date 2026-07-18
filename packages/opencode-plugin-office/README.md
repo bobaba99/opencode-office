@@ -2,7 +2,7 @@
 
 An [opencode](https://opencode.ai) plugin that gives the agent five tools for working with
 Word (`.docx`) and PowerPoint (`.pptx`) files: `office_read`, `office_edit`, `office_create`,
-`office_render`, and `office_python`. It's built on `@opencode-office/core`, which drives
+`office_render`, and `office_python`. It's built on `opencode-office-core`, which drives
 `python-docx` / `python-pptx` / `pillow` / `pymupdf` in a managed venv, plus LibreOffice
 (`soffice`) for rendering.
 
@@ -30,7 +30,7 @@ Either way, reference it by name in `opencode.json`:
 ```
 
 **Platform:** developed and tested on macOS/Linux. Windows is untested — the Python venv
-provisioning and LibreOffice discovery paths in `@opencode-office/core` assume a POSIX shell.
+provisioning and LibreOffice discovery paths in `opencode-office-core` assume a POSIX shell.
 
 ## Skill registration (manual — not possible to automate on `@opencode-ai/plugin@1.18.3`)
 

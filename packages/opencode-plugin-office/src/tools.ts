@@ -16,7 +16,7 @@ import {
   type DocxOperation,
   type PptxOperation,
   type PptxSlideSpec,
-} from "@opencode-office/core"
+} from "opencode-office-core"
 import { truncateForModel } from "./truncate"
 
 // `tool()` (see node_modules/.../@opencode-ai/plugin/dist/tool.js) is a plain identity
