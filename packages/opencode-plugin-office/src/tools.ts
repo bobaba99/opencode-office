@@ -8,9 +8,11 @@ import {
   ensureVenv,
   formatDocxRead,
   formatPptxRead,
+  parseId,
   readDocx,
   readPptx,
   renderOffice,
+  toToolError,
   type DocxOperation,
   type PptxOperation,
 } from "@opencode-office/core"
@@ -48,10 +50,16 @@ async function withHintedErrors<R>(run: () => Promise<R>): Promise<R> {
   try {
     return await run()
   } catch (err) {
-    if (err instanceof OfficeError && !err.message.includes(err.hint)) {
-      throw new OfficeError(err.code, `${err.message} — ${err.hint}`, err.hint)
+    if (err instanceof OfficeError) {
+      if (!err.message.includes(err.hint)) {
+        throw new OfficeError(err.code, `${err.message} — ${err.hint}`, err.hint)
+      }
+      throw err
     }
-    throw err
+    // Non-OfficeError failures (thrown by dependencies, runtime errors, etc.) must not reach
+    // the model unstructured — route them through the same code/message/hint shape.
+    const t = toToolError(err)
+    throw new OfficeError(t.code, t.message, t.hint)
   }
 }
 
@@ -86,6 +94,20 @@ function validateOperations(ext: "docx" | "pptx", operations: unknown): Record<s
         `Valid ops for .${ext}: ${[...validOps].join(", ")}`,
       )
     }
+
+    // Every op is anchored to an element ID — `after` for the two insert ops, `target`
+    // otherwise. Validate its presence/shape and parse it here, before ctx.ask, so a bad
+    // ID never reaches a permission prompt.
+    const field = op === "insert_content" || op === "insert_slide" ? "after" : "target"
+    const id = el[field]
+    if (typeof id !== "string") {
+      throw new OfficeError(
+        "BAD_ARGS",
+        `op ${op} is missing its ${field} id`,
+        "Every operation needs the element ID copied from office_read output.",
+      )
+    }
+    parseId(id)
 
     if (REQUIRED_ANCHOR_OPS.has(op) && !("anchor" in el)) {
       throw new OfficeError("BAD_ANCHOR", `${op} requires an anchor`, "Copy the exact current text from office_read as the anchor.")
@@ -224,6 +246,7 @@ const officeRender = tool({
   },
   async execute(args): Promise<ToolResult> {
     return withHintedErrors(async () => {
+      requireOfficeExt(args.file)
       const result = await renderOffice(args.file, { pages: args.pages })
       return {
         output: `Rendered ${result.pages.length} page(s)`,

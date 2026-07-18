@@ -78,6 +78,7 @@ export async function acquireLock(
   const lockDir = dir + ".lock"
   const staleMs = opts?.staleMs ?? 300_000
   const deadline = Date.now() + (opts?.timeoutMs ?? 120_000)
+  await mkdir(path.dirname(lockDir), { recursive: true })
   for (;;) {
     try {
       await mkdir(lockDir)
@@ -87,12 +88,9 @@ export async function acquireLock(
     } catch {
       try {
         const age = Date.now() - (await stat(lockDir)).mtimeMs
-        if (age > staleMs) {
-          await rm(lockDir, { recursive: true, force: true })
-          continue
-        }
+        if (age > staleMs) await rm(lockDir, { recursive: true, force: true })
       } catch {
-        continue
+        // lock vanished or is unreadable; fall through to deadline + sleep, then retry
       }
       if (Date.now() > deadline)
         throw new OfficeError(
@@ -109,10 +107,12 @@ export async function ensureVenv(cacheDir = defaultCacheDir()): Promise<string> 
   const venvDir = path.join(cacheDir, "venv")
   const python = venvPython(venvDir)
   if (await venvIsCurrent(venvDir)) return python
+  // Must exist before acquireLock so the very first office call on a fresh machine
+  // isn't relying on the lock's own mkdir to create the cache directory's parent.
+  await mkdir(cacheDir, { recursive: true })
   const release = await acquireLock(path.join(cacheDir, "venv"))
   try {
     if (await venvIsCurrent(venvDir)) return python
-    await mkdir(cacheDir, { recursive: true })
     // A stale venv (fingerprint mismatch from a PINNED change) must be cleared first —
     // `uv venv` refuses to create over an existing directory without --clear.
     await rm(venvDir, { recursive: true, force: true })

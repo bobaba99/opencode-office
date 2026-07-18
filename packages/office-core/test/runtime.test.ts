@@ -48,3 +48,12 @@ test("stale lock is stolen", async () => {
   const release = await acquireLock(dir, { staleMs: 300_000, timeoutMs: 5_000 })
   await release()
 })
+
+test("acquireLock with a missing parent resolves quickly instead of spinning", async () => {
+  const dir = "/tmp/oc-office-parent-test/nested/venv"
+  await rm("/tmp/oc-office-parent-test", { recursive: true, force: true })
+  const start = Date.now()
+  const release = await acquireLock(dir, { timeoutMs: 5_000 })
+  expect(Date.now() - start).toBeLessThan(2_000)
+  await release()
+})

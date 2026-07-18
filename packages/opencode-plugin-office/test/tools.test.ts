@@ -109,6 +109,50 @@ test("office_edit missing anchor on an anchor-required op throws BAD_ANCHOR with
   expect(askCalls).toBe(0)
 })
 
+test("missing target id fails BAD_ARGS before ask", async () => {
+  let askCalls = 0
+  const spyCtx = makeCtx({
+    ask: async () => {
+      askCalls++
+    },
+  })
+  try {
+    await officeTools.office_edit.execute(
+      {
+        file: path.join(FIXTURE_DIR, "report.docx"),
+        operations: [{ op: "replace_text", anchor: "x", text: "y" }],
+      } as never,
+      spyCtx,
+    )
+    expect.unreachable()
+  } catch (e) {
+    expect((e as OfficeError).code).toBe("BAD_ARGS")
+  }
+  expect(askCalls).toBe(0)
+})
+
+test("malformed target id fails BAD_ID before ask", async () => {
+  let askCalls = 0
+  const spyCtx = makeCtx({
+    ask: async () => {
+      askCalls++
+    },
+  })
+  try {
+    await officeTools.office_edit.execute(
+      {
+        file: path.join(FIXTURE_DIR, "report.docx"),
+        operations: [{ op: "replace_text", target: "banana", anchor: "x", text: "y" }],
+      } as never,
+      spyCtx,
+    )
+    expect.unreachable()
+  } catch (e) {
+    expect((e as OfficeError).code).toBe("BAD_ID")
+  }
+  expect(askCalls).toBe(0)
+})
+
 test("office_create rejects an empty slides array with BAD_ARGS", async () => {
   try {
     await officeTools.office_create.execute({ file: path.join(FIXTURE_DIR, "plugin-new-deck.pptx"), slides: [] } as never, ctx)
@@ -151,6 +195,15 @@ test("truncateForModel truncates over-limit text", () => {
 test("truncateForModel leaves under-limit text unchanged", () => {
   const small = "hello world"
   expect(truncateForModel(small)).toBe(small)
+})
+
+test("office_render on an unsupported extension throws UNSUPPORTED_FORMAT without invoking soffice", async () => {
+  try {
+    await officeTools.office_render.execute({ file: "notes.txt" } as never, ctx)
+    expect.unreachable()
+  } catch (e) {
+    expect((e as OfficeError).code).toBe("UNSUPPORTED_FORMAT")
+  }
 })
 
 test.skipIf(!HAS_SOFFICE)(

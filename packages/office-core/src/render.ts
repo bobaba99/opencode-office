@@ -56,12 +56,17 @@ export async function renderOffice(
     const { code, stderr } = await convertToPdf(soffice, file, profileDir, tmpDir, timeoutMs)
     const base = path.basename(file, path.extname(file))
     const pdfPath = path.join(tmpDir, `${base}.pdf`)
-    if (code !== 0 || !existsSync(pdfPath))
+    if (code !== 0 || !existsSync(pdfPath)) {
+      const message =
+        code === 0
+          ? `soffice exited 0 but produced no output converting ${file} to pdf — another process may be holding the render profile`
+          : `soffice failed to convert ${file} to pdf (exit ${code})`
       throw new OfficeError(
         "RENDER_FAILED",
-        `soffice failed to convert ${file} to pdf (exit ${code})`,
+        message,
         `Retry once — LibreOffice can flake on first run; if it persists, confirm the file opens in LibreOffice directly. stderr: ${(stderr || "none").slice(-1500)}`,
       )
+    }
 
     const outDir = opts?.outDir ?? path.join(cacheDir, "renders", base)
     await mkdir(outDir, { recursive: true })
