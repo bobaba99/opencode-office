@@ -110,6 +110,10 @@ def make_edit_pptx(path):
     chart_data.add_series("S1", (1.0, 2.0))
     s4 = prs.slides.add_slide(prs.slide_layouts[6])
     s4.shapes.add_chart(XL_CHART_TYPE.COLUMN_CLUSTERED, Inches(1), Inches(1), Inches(4), Inches(3), chart_data)
+    buf2 = io.BytesIO()
+    PILImage.new("RGB", (32, 32), (20, 160, 60)).save(buf2, format="PNG")
+    buf2.seek(0)
+    s4.shapes.add_picture(buf2, Inches(5), Inches(1))
     prs.save(path)
 
 

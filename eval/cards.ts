@@ -58,7 +58,7 @@ export const CARDS: Card[] = [
     id: "pptx-image",
     files: ["edit-deck.pptx", "swap.png"],
     prompt: (arena) =>
-      `In ${path.join(arena, "edit-deck.pptx")}, duplicate the third slide (the one with the picture) and on the DUPLICATE swap the picture for ${path.join(arena, "swap.png")}. Leave the original slide untouched.`,
+      `In ${path.join(arena, "edit-deck.pptx")}, duplicate the third slide (the picture-only slide) and on the DUPLICATE swap the picture for ${path.join(arena, "swap.png")}. Leave the original slide untouched.`,
     check: checks.checkPptxImage,
   },
   {

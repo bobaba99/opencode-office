@@ -62,7 +62,8 @@ def replace_in_frame(shape, anchor, text, target):
 
 # OOXML relationships namespace. Checked by prefix rather than an enumerated attribute list
 # (r:id/r:embed/r:link) because SmartArt's <dgm:relIds> uses r:dm/r:lo/r:qs/r:cs — same
-# namespace, different local names — and would otherwise slip past the guard below.
+# namespace, different local names — and would otherwise slip past the remap-or-raise pass
+# in copy_slide below.
 R_NS = "{http://schemas.openxmlformats.org/officeDocument/2006/relationships}"
 
 
@@ -82,28 +83,34 @@ def copy_slide(prs, source):
         el = deepcopy(shape._element)
         # Rewrite every r:*-namespace attribute whose value was remapped above — not just
         # a:blip/r:embed. This also covers a:hlinkClick/a:hlinkHover r:id (text hyperlinks).
+        #
+        # The remap-or-raise decision is made in this single pass, keyed on the ORIGINAL
+        # (pre-rewrite) rId read straight off the deep-copied element. rIds are only unique
+        # per part: a source slide can mix an unsupported rel (e.g. a chart's rId2) with a
+        # supported one (e.g. an image's rId3, remapped here to a new rId2 on the new
+        # slide's part). Checking membership *after* rewriting — against the new part's rels
+        # — would let the chart's untouched, still-literal "rId2" collide with the image's
+        # brand-new "rId2" and read as present, silently corrupting the copy (the chart's
+        # relationship now resolves to the image part). Deciding per original rId, before any
+        # rewriting on this element happens, makes that collision impossible: every r:*
+        # reference is either remapped from rid_map or fatal, never left to a coincidental
+        # string match on the destination part.
         for descendant in el.iter():
             for name, value in list(descendant.attrib.items()):
-                if name.startswith(R_NS) and value in rid_map:
+                if not name.startswith(R_NS):
+                    continue
+                if value in rid_map:
                     descendant.set(name, rid_map[value])
+                else:
+                    tag = descendant.tag.rsplit("}", 1)[-1]
+                    raise WorkerError(
+                        "UNSUPPORTED_SLIDE_CONTENT",
+                        f"Slide contains content duplicate_slide cannot copy safely ({tag})",
+                        "Charts, SmartArt, and embedded objects are not yet supported by duplicate_slide. Edit the original slide, or delete/replace the unsupported element first.",
+                    )
         new_slide.shapes._spTree.append(el)
     if source.has_notes_slide:
         new_slide.notes_slide.notes_text_frame.text = source.notes_slide.notes_text_frame.text
-
-    # Fail loud on content duplicate_slide cannot copy safely: any relationship-bearing
-    # attribute (chart parts, SmartArt data, OLE objects, external links, hyperlinks, ...)
-    # that didn't get remapped above still points at a relationship id that doesn't exist on
-    # the new slide's part. Raised before returning — apply_one/main never reach prs.save(),
-    # so the batch aborts and the file on disk is untouched.
-    for el in new_slide.shapes._spTree.iter():
-        for name, value in el.attrib.items():
-            if name.startswith(R_NS) and value not in new_slide.part.rels:
-                tag = el.tag.rsplit("}", 1)[-1]
-                raise WorkerError(
-                    "UNSUPPORTED_SLIDE_CONTENT",
-                    f"Slide contains content duplicate_slide cannot copy safely ({tag})",
-                    "Charts, SmartArt, and embedded objects are not yet supported by duplicate_slide. Edit the original slide, or delete/replace the unsupported element first.",
-                )
     return new_slide
 
 

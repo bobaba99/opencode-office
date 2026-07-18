@@ -57,7 +57,14 @@ test("duplicate_slide copies a slide with a text hyperlink without tripping the 
   )
 })
 
-test("duplicate_slide on a chart slide fails with UNSUPPORTED_SLIDE_CONTENT, file unchanged", async () => {
+test("duplicate_slide on a slide mixing a chart (unsupported) and a picture (supported) fails with UNSUPPORTED_SLIDE_CONTENT, file unchanged", async () => {
+  // s:3 mixes an unsupported rel (the chart) with a supported one (a picture) on the same
+  // slide — the regression case for the rId-collision guard. Confirm the probe still finds
+  // that picture at s:3 before duplicating, so a future fixture edit can't silently retarget
+  // this test at a slide that no longer has the chart+picture mix it's meant to exercise.
+  const probeBefore = await runWorker<ProbeResult>("pptx_probe.py", { file: WORK })
+  expect(probeBefore.pictures.some((p) => p.id === "s:3/sh:1")).toBe(true)
+
   const before = await readPptx(WORK, "content")
   try {
     await editPptx(WORK, [{ op: "duplicate_slide", target: "s:3" }])
