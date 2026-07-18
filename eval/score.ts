@@ -111,11 +111,14 @@ export async function checkDocxInsert(arena: string): Promise<CardScore> {
     "EMEA led growth for the third consecutive quarter.",
     "Prepared by the finance team.",
   ]
+  let lastIdx = -1
   for (const text of expectedPre) {
-    if (!doc.elements.some((e) => e.type === "paragraph" && e.text === text)) {
+    const idx = doc.elements.findIndex((e) => e.type === "paragraph" && e.text === text)
+    if (idx === -1 || idx <= lastIdx) {
       fidelity = false
-      notes.push(`pre-existing paragraph missing/changed: ${text}`)
+      notes.push(`pre-existing paragraph out of order or missing: ${text}`)
     }
+    lastIdx = idx
   }
   const table = doc.elements.find((e) => e.type === "table")
   if (!table || table.type !== "table" || table.text !== "Region | Revenue\nEMEA | $4.2M") {
@@ -141,25 +144,20 @@ export async function checkDocxTable(arena: string): Promise<CardScore> {
   }
 
   const table = doc.elements.find((e) => e.type === "table")
-  if (table?.type === "table" && table.text === "Region | Revenue\nEMEA | $5.1M") {
-    success = true
-  } else {
-    notes.push(`table text mismatch: ${table && table.type === "table" ? table.text : "missing"}`)
-  }
-
-  if (table?.type === "table") {
-    const rows = (table.text ?? "").split("\n")
-    if (rows[0] !== "Region | Revenue") {
-      fidelity = false
-      notes.push(`header row changed: ${rows[0]}`)
+  if (table?.type === "table" && table.text) {
+    const rows = table.text.split("\n").map((r) => r.split(" | "))
+    if (rows[1]?.[1] === "$5.1M") {
+      success = true
+    } else {
+      notes.push(`cell(1,1) is ${JSON.stringify(rows[1]?.[1])}, expected "$5.1M"`)
     }
-    if (rows[1]?.split(" | ")[0] !== "EMEA") {
+    if (rows[0]?.[0] !== "Region" || rows[0]?.[1] !== "Revenue" || rows[1]?.[0] !== "EMEA") {
       fidelity = false
-      notes.push(`row label changed: ${rows[1]}`)
+      notes.push("untouched table cells changed")
     }
   } else {
-    fidelity = false
     notes.push("table missing")
+    fidelity = false
   }
 
   const paragraphTexts = [

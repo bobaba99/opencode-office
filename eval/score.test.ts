@@ -92,3 +92,20 @@ test("pptx-image: swapping the ORIGINAL's picture instead of the duplicate's fli
   expect(result.success).toBe(false)
   expect(result.fidelity).toBe(false)
 })
+
+test("docx-table: correct cell edit with corrupting header edit scores success:true fidelity:false", async () => {
+  await copyCardFixtures("docx-table")
+  const file = path.join(ARENA, "report.docx")
+  const before = await readDocx(file, "content")
+  const table = before.elements.find((e) => e.type === "table")!
+
+  // Apply correct edit: cell(1,1) → "$5.1M" and corrupting edit: cell(0,0) → "Territory"
+  await editDocx(file, [
+    { op: "set_table_cell", target: table.id, row: 1, col: 1, text: "$5.1M" },
+    { op: "set_table_cell", target: table.id, row: 0, col: 0, text: "Territory" },
+  ])
+
+  const result = await card("docx-table").check(ARENA)
+  expect(result.success).toBe(true)
+  expect(result.fidelity).toBe(false)
+})
