@@ -11,7 +11,17 @@ the full operations catalog) and the underlying tool contracts.
 
 ## Install
 
-Add the plugin to your `opencode.json`:
+**From npm** (once published):
+
+```sh
+bun add opencode-plugin-office
+```
+
+**From a local checkout / workspace** (the only path available today): install/link the package
+wherever `opencode.json` resolves it from — opencode loads plugins from `node_modules` or a
+workspace path.
+
+Either way, reference it by name in `opencode.json`:
 
 ```json
 {
@@ -19,8 +29,8 @@ Add the plugin to your `opencode.json`:
 }
 ```
 
-opencode loads plugins from `node_modules` (or a workspace path during local development), so
-the package must be installed/linked wherever `opencode.json` resolves it from.
+**Platform:** developed and tested on macOS/Linux. Windows is untested — the Python venv
+provisioning and LibreOffice discovery paths in `@opencode-office/core` assume a POSIX shell.
 
 ## Skill registration (manual — not possible to automate on `@opencode-ai/plugin@1.18.3`)
 

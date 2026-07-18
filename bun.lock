@@ -11,13 +11,13 @@
     },
     "packages/office-core": {
       "name": "@opencode-office/core",
-      "version": "0.0.1",
+      "version": "0.1.0",
     },
     "packages/opencode-plugin-office": {
       "name": "opencode-plugin-office",
-      "version": "0.0.1",
+      "version": "0.1.0",
       "dependencies": {
-        "@opencode-ai/plugin": "^1.18.3",
+        "@opencode-ai/plugin": "1.18.3",
         "@opencode-office/core": "workspace:*",
       },
     },
