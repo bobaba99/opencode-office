@@ -12,5 +12,6 @@
   "dependencies": {
     "@opencode-ai/plugin": "1.18.3",
     "@opencode-office/core": "workspace:*"
-  }
+  },
+  "publishConfig": { "access": "public" }
 }

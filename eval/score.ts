@@ -291,41 +291,52 @@ export async function checkPptxImage(arena: string): Promise<CardScore> {
   let fidelity = true
   const file = path.join(arena, "edit-deck.pptx")
   const swap = path.join(arena, "swap.png")
+  const pristine = path.join(FIXTURE_DIR, "edit-deck.pptx")
+  // The picture-only slide named in the prompt ("the third slide") — its own position never
+  // shifts as a result of this edit, since duplicating only appends/inserts a NEW slide
+  // elsewhere in the deck; the original slide's index is stable regardless of where the copy
+  // lands.
+  const ORIGINAL_ID = "s:2/sh:0"
 
   let outline: Awaited<ReturnType<typeof readPptx>>
   let probe: PictureProbe
   let swapHash: string
+  let pristineOutline: Awaited<ReturnType<typeof readPptx>>
+  let pristineProbe: PictureProbe
   try {
     outline = await readPptx(file, "outline")
     probe = await runWorker<PictureProbe>("pptx_probe.py", { file })
     swapHash = await sha256File(swap)
+    pristineOutline = await readPptx(pristine, "outline")
+    pristineProbe = await runWorker<PictureProbe>("pptx_probe.py", { file: pristine })
   } catch (e) {
     return fail([`could not read/probe ${file}: ${e instanceof Error ? e.message : String(e)}`])
   }
 
-  if (outline.slides.length !== 5) {
-    notes.push(`expected 5 slides, got ${outline.slides.length}`)
-  }
-  const duplicate = probe.pictures.find((p) => p.id === "s:3/sh:0")
-  if (outline.slides.length === 5 && duplicate?.sha256 === swapHash) {
-    success = true
-  } else {
-    notes.push(`s:3/sh:0 sha mismatch: got ${duplicate?.sha256}, expected ${swapHash}`)
+  const expectedCount = pristineOutline.slides.length + 1
+  const countOk = outline.slides.length === expectedCount
+  if (!countOk) {
+    notes.push(`expected ${expectedCount} slides (original ${pristineOutline.slides.length} + 1 duplicate), got ${outline.slides.length}`)
   }
 
-  try {
-    const pristine = path.join(FIXTURE_DIR, "edit-deck.pptx")
-    const pristineProbe = await runWorker<PictureProbe>("pptx_probe.py", { file: pristine })
-    const pristineOriginal = pristineProbe.pictures.find((p) => p.id === "s:2/sh:0")
-    const currentOriginal = probe.pictures.find((p) => p.id === "s:2/sh:0")
-    if (!pristineOriginal || !currentOriginal || currentOriginal.sha256 !== pristineOriginal.sha256) {
-      fidelity = false
-      notes.push(`s:2/sh:0 (original) sha changed: got ${currentOriginal?.sha256}, expected ${pristineOriginal?.sha256}`)
-    }
-  } catch (e) {
+  const pristineOriginal = pristineProbe.pictures.find((p) => p.id === ORIGINAL_ID)
+  const currentOriginal = probe.pictures.find((p) => p.id === ORIGINAL_ID)
+  const originalIntact = !!pristineOriginal && !!currentOriginal && currentOriginal.sha256 === pristineOriginal.sha256
+  if (!originalIntact) {
     fidelity = false
-    notes.push(`pristine comparison probe failed: ${e instanceof Error ? e.message : String(e)}`)
+    notes.push(`original slide's picture (${ORIGINAL_ID}) changed: got ${currentOriginal?.sha256}, expected ${pristineOriginal?.sha256}`)
   }
+
+  // The prompt doesn't pin where the duplicate lands — native duplicate_slide places it right
+  // after the source, but a different tool path (e.g. a generic script) could append it at the
+  // end instead. Locate it by CONTENT rather than a fixed index: any picture, other than the
+  // untouched original, whose sha256 matches swap.png.
+  const swapped = probe.pictures.find((p) => p.id !== ORIGINAL_ID && p.sha256 === swapHash)
+  if (!swapped) {
+    notes.push(`no picture outside ${ORIGINAL_ID} matches swap.png's sha256 (${swapHash})`)
+  }
+
+  success = countOk && originalIntact && !!swapped
 
   return { success, fidelity, notes }
 }

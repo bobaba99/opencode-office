@@ -48,7 +48,7 @@ The skill cannot be auto-registered by this plugin (see below), so copy it into 
 skills directory yourself:
 
 ```sh
-cp packages/opencode-plugin-office/skill/SKILL.md ~/.config/opencode/skill/office-tools/SKILL.md
+mkdir -p ~/.config/opencode/skills/office-tools && cp packages/opencode-plugin-office/skill/SKILL.md ~/.config/opencode/skills/office-tools/SKILL.md
 ```
 
 Full install details, including why skill auto-registration isn't possible with the installed
@@ -89,3 +89,11 @@ caveat and refresh policy before treating close scores as a ranking.
 
 This table is copied by hand from `docs/BENCHMARK.md`, which is regenerated with
 `bun eval/report.ts`; re-copy it here after a regeneration if the numbers change.
+
+## Releasing
+
+Publish `@opencode-office/core` before `opencode-plugin-office` — the plugin depends on it via
+`workspace:*`, which npm rewrites to a concrete version range at publish time; publishing the
+plugin first would ship a dependency range the registry can't yet resolve. After bumping
+versions, run `bun install` so the workspace rewrite is reflected in a fresh `bun.lock` before
+publishing either package.

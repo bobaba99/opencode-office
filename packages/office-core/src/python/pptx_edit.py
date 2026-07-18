@@ -99,6 +99,12 @@ def copy_slide(prs, source):
             for name, value in list(descendant.attrib.items()):
                 if not name.startswith(R_NS):
                     continue
+                if not value:
+                    # An empty r:* value is not a reference at all — e.g. PowerPoint action
+                    # buttons serialize r:id="" on their a:hlinkClick when the action is a
+                    # built-in slide jump (ppaction://hlinkshowjump?...) rather than a real
+                    # relationship. Nothing to remap and nothing unsupported; leave it as-is.
+                    continue
                 if value in rid_map:
                     descendant.set(name, rid_map[value])
                 else:
@@ -106,7 +112,7 @@ def copy_slide(prs, source):
                     raise WorkerError(
                         "UNSUPPORTED_SLIDE_CONTENT",
                         f"Slide contains content duplicate_slide cannot copy safely ({tag})",
-                        "Charts, SmartArt, and embedded objects are not yet supported by duplicate_slide. Edit the original slide, or delete/replace the unsupported element first.",
+                        "Charts, SmartArt, embedded objects, and internal slide-jump links are not yet supported by duplicate_slide. Edit the original slide, or delete/replace the unsupported element first.",
                     )
         new_slide.shapes._spTree.append(el)
     if source.has_notes_slide:

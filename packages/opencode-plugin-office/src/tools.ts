@@ -15,6 +15,7 @@ import {
   toToolError,
   type DocxOperation,
   type PptxOperation,
+  type PptxSlideSpec,
 } from "@opencode-office/core"
 import { truncateForModel } from "./truncate"
 
@@ -175,6 +176,55 @@ function validateOperations(ext: "docx" | "pptx", operations: unknown): Record<s
   return parsed.data
 }
 
+// office_create's zod shape (like office_edit's) is metadata only — never actually parsed
+// at runtime (see the `tool()` comment above) — so a model passing malformed args (a bare
+// string for `markdown`, or `bullets` as a single string instead of an array of strings)
+// would otherwise reach python-docx/python-pptx directly. A bare string handed to
+// `"\n".join(...)` on the Python side joins CHARACTER by character, silently producing
+// garbage bullets instead of a clean error. Validate before ctx.ask, same as office_edit.
+function validateDocxMarkdown(markdown: unknown): string {
+  if (typeof markdown !== "string" || markdown.length === 0) {
+    throw new OfficeError(
+      "BAD_ARGS",
+      "markdown is required (a non-empty string) to create a .docx file",
+      "Pass markdown describing the document body in the `markdown` argument.",
+    )
+  }
+  return markdown
+}
+
+function validatePptxSlideSpecs(slides: unknown): PptxSlideSpec[] {
+  if (!Array.isArray(slides) || slides.length === 0) {
+    throw new OfficeError(
+      "BAD_ARGS",
+      "slides is required (a non-empty array) to create a .pptx file",
+      "Pass a non-empty array of slide specs ({ layout, title?, bullets?, notes? }) in the `slides` argument.",
+    )
+  }
+  slides.forEach((slide, i) => {
+    if (typeof slide !== "object" || slide === null) {
+      throw new OfficeError("BAD_ARGS", `slides[${i}] must be an object`, "Each slide spec is { layout, title?, bullets?, notes? }.")
+    }
+    const layout = (slide as Record<string, unknown>).layout
+    if (typeof layout !== "string" || layout.length === 0) {
+      throw new OfficeError(
+        "BAD_ARGS",
+        `slides[${i}].layout must be a non-empty string`,
+        "Each slide spec needs a string `layout` naming a layout in the deck/template — office_read outline mode lists slide layouts.",
+      )
+    }
+    const bullets = (slide as Record<string, unknown>).bullets
+    if (bullets !== undefined && (!Array.isArray(bullets) || bullets.some((b) => typeof b !== "string"))) {
+      throw new OfficeError(
+        "BAD_ARGS",
+        `slides[${i}].bullets must be an array of strings`,
+        'Pass bullets as an array of strings, e.g. ["First point", "Second point"] — a bare string is joined character-by-character, not treated as one bullet.',
+      )
+    }
+  })
+  return slides as PptxSlideSpec[]
+}
+
 const officeRead = tool({
   description:
     'Read a .docx or .pptx file. Start with mode "outline" (headings/titles only), then "content" for full text — optionally narrowed with a target element ID copied from a prior read.',
@@ -262,19 +312,15 @@ const officeCreate = tool({
       const ext = requireOfficeExt(args.file)
 
       if (ext === "docx") {
-        if (!args.markdown) {
-          throw new OfficeError("BAD_ARGS", "markdown is required to create a .docx file", "Pass markdown describing the document body in the `markdown` argument.")
-        }
+        const markdown = validateDocxMarkdown(args.markdown)
         await ctx.ask({ permission: "office_create", patterns: [args.file], always: [args.file], metadata: { format: "docx" } })
-        const result = await createDocx(args.file, args.markdown, { reference: args.reference })
+        const result = await createDocx(args.file, markdown, { reference: args.reference })
         return truncateForModel(`Created ${result.file} with ${result.paragraphs} paragraph(s).`)
       }
 
-      if (!args.slides || args.slides.length === 0) {
-        throw new OfficeError("BAD_ARGS", "slides is required (non-empty) to create a .pptx file", "Pass a non-empty array of slide specs ({ layout, title?, bullets?, notes? }) in the `slides` argument.")
-      }
+      const slides = validatePptxSlideSpecs(args.slides)
       await ctx.ask({ permission: "office_create", patterns: [args.file], always: [args.file], metadata: { format: "pptx" } })
-      const result = await createPptx(args.file, args.slides, { template: args.template })
+      const result = await createPptx(args.file, slides, { template: args.template })
       const skipped = result.skipped.length ? ` Skipped: ${result.skipped.map((s) => `slide ${s.slide} field ${s.field}`).join(", ")}.` : ""
       return truncateForModel(`Created ${result.file} with ${result.slides} slide(s).${skipped}`)
     })

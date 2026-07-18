@@ -81,6 +81,23 @@ test("pptx-image: correct edit (duplicate then swap the duplicate's picture) sco
   expect(result.fidelity).toBe(true)
 })
 
+test("pptx-image: duplicate landing at a different index than the native tool's default placement still scores success:true fidelity:true", async () => {
+  // The prompt doesn't pin where the duplicate lands. duplicate_slide's native placement puts
+  // it right after the source (s:3 here), but this simulates a different tool path relocating
+  // it further down the deck (s:4) before the picture swap — the scoring must locate the
+  // duplicate by content, not by the fixed index the native op happens to produce.
+  await copyCardFixtures("pptx-image")
+  const file = path.join(ARENA, "edit-deck.pptx")
+  const swap = path.join(ARENA, "swap.png")
+  await editPptx(file, [{ op: "duplicate_slide", target: "s:2" }])
+  await editPptx(file, [{ op: "move_slide", target: "s:3", index: 4 }])
+  await editPptx(file, [{ op: "replace_image", target: "s:4/sh:0", image: swap }])
+
+  const result = await card("pptx-image").check(ARENA)
+  expect(result.success).toBe(true)
+  expect(result.fidelity).toBe(true)
+})
+
 test("pptx-image: swapping the ORIGINAL's picture instead of the duplicate's flips both flags", async () => {
   await copyCardFixtures("pptx-image")
   const file = path.join(ARENA, "edit-deck.pptx")

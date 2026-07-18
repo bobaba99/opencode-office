@@ -6,5 +6,6 @@
   "keywords": ["docx", "pptx", "office", "word", "powerpoint", "python-docx", "python-pptx", "opencode"],
   "type": "module",
   "exports": { ".": "./src/index.ts" },
-  "files": ["src/**/*.ts", "src/python/**/*.py", "LICENSE"]
+  "files": ["src/**/*.ts", "src/python/**/*.py", "LICENSE"],
+  "publishConfig": { "access": "public" }
 }

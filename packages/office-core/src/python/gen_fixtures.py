@@ -100,6 +100,15 @@ def make_edit_pptx(path):
     para = s2.placeholders[1].text_frame.paragraphs[0]
     run = para.runs[0]
     run.hyperlink.address = "https://example.com"
+    # Action-button-style hyperlink with an EMPTY r:id: PowerPoint serializes r:id="" on
+    # a:hlinkClick when the action is a built-in slide jump (ppaction://hlinkshowjump?...)
+    # rather than a real external/internal relationship. Regresses the empty-r:*-value guard
+    # in pptx_edit.py's copy_slide — this must not trip UNSUPPORTED_SLIDE_CONTENT.
+    run2 = s2.placeholders[1].text_frame.paragraphs[1].runs[0]
+    from pptx.oxml.ns import qn as pptx_qn
+    rPr = run2._r.get_or_add_rPr()
+    hlink = rPr.makeelement(pptx_qn("a:hlinkClick"), {pptx_qn("r:id"): "", "action": "ppaction://hlinkshowjump?jump=nextslide"})
+    rPr.append(hlink)
     buf = io.BytesIO()
     PILImage.new("RGB", (64, 64), (200, 30, 30)).save(buf, format="PNG")
     buf.seek(0)
