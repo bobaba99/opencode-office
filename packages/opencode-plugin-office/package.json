@@ -3,15 +3,35 @@
   "version": "0.1.0",
   "description": "opencode plugin: office_read/office_edit/office_create/office_render/office_python tools for .docx/.pptx files, plus the office-tools skill.",
   "license": "MIT",
-  "keywords": ["opencode", "opencode-plugin", "docx", "pptx", "office", "word", "powerpoint"],
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "docx",
+    "pptx",
+    "office",
+    "word",
+    "powerpoint"
+  ],
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
   },
-  "files": ["src", "skill", "LICENSE", "README.md"],
+  "files": [
+    "src",
+    "skill",
+    "LICENSE",
+    "README.md"
+  ],
   "dependencies": {
     "@opencode-ai/plugin": "1.18.3",
     "@opencode-office/core": "workspace:*"
   },
-  "publishConfig": { "access": "public" }
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bobaba99/opencode-office.git",
+    "directory": "packages/opencode-plugin-office"
+  }
 }

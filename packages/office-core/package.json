@@ -1,11 +1,33 @@
 {
   "name": "@opencode-office/core",
   "version": "0.1.0",
-  "description": "Read, edit, create, and render .docx/.pptx files (python-docx / python-pptx / LibreOffice under the hood). TypeScript source, executed directly by Bun/opencode — not a compiled Node package.",
+  "description": "Read, edit, create, and render .docx/.pptx files (python-docx / python-pptx / LibreOffice under the hood). TypeScript source, executed directly by Bun/opencode \u2014 not a compiled Node package.",
   "license": "MIT",
-  "keywords": ["docx", "pptx", "office", "word", "powerpoint", "python-docx", "python-pptx", "opencode"],
+  "keywords": [
+    "docx",
+    "pptx",
+    "office",
+    "word",
+    "powerpoint",
+    "python-docx",
+    "python-pptx",
+    "opencode"
+  ],
   "type": "module",
-  "exports": { ".": "./src/index.ts" },
-  "files": ["src/**/*.ts", "src/python/**/*.py", "LICENSE"],
-  "publishConfig": { "access": "public" }
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src/**/*.ts",
+    "src/python/**/*.py",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bobaba99/opencode-office.git",
+    "directory": "packages/office-core"
+  }
 }
