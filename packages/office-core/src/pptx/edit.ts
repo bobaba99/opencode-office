@@ -13,7 +13,9 @@ export type PptxOperation =
   | { op: "move_slide"; target: string; index: number }
   | { op: "replace_image"; target: string; image: string }
 
-function assertPptxId(id: string): void {
+const SHAPE_OPS = new Set(["set_shape_text", "replace_image"])
+
+function assertPptxId(id: string, op: string): void {
   const ref = parseId(id)
   if (ref.kind !== "slide" && ref.kind !== "shape")
     throw new OfficeError(
@@ -21,6 +23,11 @@ function assertPptxId(id: string): void {
       `Target ${id} is not a pptx element ID`,
       "pptx targets use s:<n> or s:<n>/sh:<m> — get IDs from office_read output for this file.",
     )
+  const needShape = SHAPE_OPS.has(op)
+  if (needShape && ref.kind !== "shape")
+    throw new OfficeError("BAD_TARGET_KIND", `${op} needs a shape target (s:<n>/sh:<m>), got ${id}`, "office_read content mode lists each slide's shape IDs.")
+  if (!needShape && ref.kind !== "slide")
+    throw new OfficeError("BAD_TARGET_KIND", `${op} needs a slide target (s:<n>), got ${id}`, "Use the slide ID without the /sh:<m> suffix.")
 }
 
 export async function editPptx(
@@ -29,7 +36,7 @@ export async function editPptx(
   opts?: { backup?: boolean; cacheDir?: string },
 ): Promise<EditResult> {
   for (const operation of operations) {
-    assertPptxId("target" in operation ? operation.target : operation.after)
+    assertPptxId("target" in operation ? operation.target : operation.after, operation.op)
   }
   const backup = opts?.backup === false ? undefined : await backupFile(file, opts?.cacheDir)
   const data = await runWorker<Omit<EditResult, "backup">>("pptx_edit.py", { file, operations }, opts)

@@ -1,10 +1,14 @@
 import { beforeEach, expect, test } from "bun:test"
+import { createHash } from "node:crypto"
 import { copyFile } from "node:fs/promises"
 import path from "node:path"
 import { OfficeError } from "../src/errors"
 import { editPptx } from "../src/pptx/edit"
 import { readPptx } from "../src/pptx/read"
+import { runWorker } from "../src/worker"
 import { FIXTURE_DIR, ensureFixtures } from "./fixtures"
+
+type ProbeResult = { pictures: Array<{ id: string; part: string; sha256: string; content_type: string }> }
 
 const WORK = path.join(FIXTURE_DIR, "work-deck.pptx")
 
@@ -51,13 +55,18 @@ test("delete_slide and move_slide restructure the deck", async () => {
   expect(after.slides.map((s) => s.title)).toEqual(["Points", "Edit Deck"])
 })
 
-test("replace_image swaps picture bytes", async () => {
+test("duplicate + replace_image: bytes swap on the copy, original untouched", async () => {
   const swap = path.join(FIXTURE_DIR, "swap.png")
-  const before = await readPptx(WORK, "content", "s:2")
-  await editPptx(WORK, [{ op: "replace_image", target: "s:2/sh:0", image: swap }])
-  const after = await readPptx(WORK, "content", "s:2")
-  expect(after.slides).toHaveLength(1)
-  expect(before.slides).toHaveLength(1)
+  const swapHash = createHash("sha256").update(Buffer.from(await Bun.file(swap).arrayBuffer())).digest("hex")
+  await editPptx(WORK, [{ op: "duplicate_slide", target: "s:2" }])
+  const before = await runWorker<ProbeResult>("pptx_probe.py", { file: WORK })
+  const originalHash = before.pictures.find((p) => p.id === "s:2/sh:0")!.sha256
+  expect(before.pictures.find((p) => p.id === "s:3/sh:0")!.sha256).toBe(originalHash)
+  await editPptx(WORK, [{ op: "replace_image", target: "s:3/sh:0", image: swap }])
+  const after = await runWorker<ProbeResult>("pptx_probe.py", { file: WORK })
+  expect(after.pictures.find((p) => p.id === "s:3/sh:0")!.sha256).toBe(swapHash)
+  expect(after.pictures.find((p) => p.id === "s:3/sh:0")!.content_type).toBe("image/png")
+  expect(after.pictures.find((p) => p.id === "s:2/sh:0")!.sha256).toBe(originalHash)
 })
 
 test("replace_image on a text shape fails with SHAPE_NOT_PICTURE", async () => {
@@ -101,5 +110,23 @@ test("docx-style target is rejected client-side", async () => {
     expect.unreachable()
   } catch (e) {
     expect((e as OfficeError).code).toBe("BAD_ID")
+  }
+})
+
+test("slide op with shape target is rejected with BAD_TARGET_KIND", async () => {
+  try {
+    await editPptx(WORK, [{ op: "delete_slide", target: "s:0/sh:1" }])
+    expect.unreachable()
+  } catch (e) {
+    expect((e as OfficeError).code).toBe("BAD_TARGET_KIND")
+  }
+})
+
+test("shape op with slide target is rejected with BAD_TARGET_KIND", async () => {
+  try {
+    await editPptx(WORK, [{ op: "set_shape_text", target: "s:1", anchor: "x", text: "y" }])
+    expect.unreachable()
+  } catch (e) {
+    expect((e as OfficeError).code).toBe("BAD_TARGET_KIND")
   }
 })

@@ -120,3 +120,31 @@ test("pptx-style target is rejected client-side", async () => {
     expect((e as OfficeError).code).toBe("BAD_ID")
   }
 })
+
+test("wrong-kind target yields BAD_TARGET_KIND", async () => {
+  try {
+    await editDocx(WORK, [{ op: "set_table_cell", target: "p:0", row: 0, col: 0, text: "x" }])
+    expect.unreachable()
+  } catch (e) {
+    expect((e as OfficeError).code).toBe("BAD_TARGET_KIND")
+  }
+})
+
+test("out-of-range cell yields CELL_OUT_OF_RANGE", async () => {
+  const tbl = (await readDocx(WORK, "content")).elements.find((e) => e.type === "table")!
+  try {
+    await editDocx(WORK, [{ op: "set_table_cell", target: tbl.id, row: 9, col: 0, text: "x" }])
+    expect.unreachable()
+  } catch (e) {
+    expect((e as OfficeError).code).toBe("CELL_OUT_OF_RANGE")
+  }
+})
+
+test("unknown op yields UNKNOWN_OP", async () => {
+  try {
+    await editDocx(WORK, [{ op: "explode", target: "p:0" } as never])
+    expect.unreachable()
+  } catch (e) {
+    expect((e as OfficeError).code).toBe("UNKNOWN_OP")
+  }
+})

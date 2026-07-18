@@ -112,6 +112,12 @@ def copy_slide(prs, source):
 
 def apply_one(prs, op):
     kind = op["op"]
+    shape_ops = {"set_shape_text", "replace_image"}
+    ident = op.get("target") or op.get("after") or ""
+    if kind in shape_ops and "/sh:" not in ident:
+        raise WorkerError("BAD_TARGET_KIND", f"{kind} needs a shape target (s:<n>/sh:<m>), got {ident}", "office_read content mode lists each slide's shape IDs.")
+    if kind not in shape_ops and "/sh:" in ident:
+        raise WorkerError("BAD_TARGET_KIND", f"{kind} needs a slide target (s:<n>), got {ident}", "Use the slide ID without the /sh:<m> suffix.")
     if kind == "set_shape_text":
         _, slide = slide_at(prs, op["target"])
         shape = shape_at(slide, op["target"])
@@ -156,12 +162,13 @@ def apply_one(prs, op):
                 f"{op['target']} is not a picture shape",
                 "replace_image targets picture shapes; text shapes keep their id but have no image to swap.",
             )
-        image_part = shape.part.related_part(shape._element.blip_rId)
         try:
-            with open(op["image"], "rb") as f:
-                image_part._blob = f.read()
+            image_part, rid = slide.part.get_or_add_image_part(op["image"])
         except OSError as e:
             raise WorkerError("FILE_OPEN", f"Cannot read image {op['image']}: {e}", "Check the image path exists and is readable.")
+        for blip in shape._element.iter(qn("a:blip")):
+            blip.set(qn("r:embed"), rid)
+            break
         return {"op": kind, "target": op["target"]}
     raise WorkerError(
         "UNKNOWN_OP",
