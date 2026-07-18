@@ -33,14 +33,16 @@ Add the plugin to your `opencode.json`:
 opencode loads plugins from `node_modules` (or a workspace path during local development), so
 the package must be installed/linked wherever `opencode.json` resolves it from.
 
-The skill isn't auto-registered yet, so copy it into an opencode skills directory yourself:
+The skill cannot be auto-registered by this plugin (see below), so copy it into an opencode
+skills directory yourself:
 
 ```sh
 cp packages/opencode-plugin-office/skill/SKILL.md ~/.config/opencode/skill/office-tools/SKILL.md
 ```
 
-Full install details, including the tracked future work to make skill registration automatic,
-live in [`packages/opencode-plugin-office/README.md`](packages/opencode-plugin-office/README.md).
+Full install details, including why skill auto-registration isn't possible with the installed
+`@opencode-ai/plugin` version, live in
+[`packages/opencode-plugin-office/README.md`](packages/opencode-plugin-office/README.md).
 
 ## Dependencies
 
