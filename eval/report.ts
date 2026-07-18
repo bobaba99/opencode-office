@@ -32,7 +32,8 @@ async function loadResults(): Promise<ModelResults[]> {
   const all = await Promise.all(
     files.map(async (f) => JSON.parse(await readFile(path.join(RESULTS_DIR, f), "utf8")) as ModelResults),
   )
-  return all.sort((a, b) => a.model.localeCompare(b.model))
+  all.sort((a, b) => a.model.localeCompare(b.model))
+  return all
 }
 
 // provider/id -> a short, honest class label. Not asserted by hand per model: derived from
@@ -159,10 +160,13 @@ function renderMethodSection(complete: ModelResults[]): string {
   calendar. A stale-but-still-valid benchmark is preferable to a fresh one measuring something
   else.
 - **Mid-battery re-measurement.** An ollama-cloud usage limit was hit partway through the run
-  and lifted by a subscription upgrade. Every card that failed with a 300s timeout under the
-  limit, plus one fast-fail that looked suspicious, was re-run with \`--force\` after the
-  upgrade. All timeouts turned out to be quota stalls, not genuine model failures; the numbers
-  below are the post-upgrade values. Any failure that survived the re-run is a genuine result.
+  and lifted by a subscription upgrade. Two fast-fails were re-run with \`--force\` after the
+  upgrade: \`ollama/gpt-oss:120b-cloud\` \`docx-table\` (4.98s fail → 44.74s PASS, reproduced
+  success and fidelity) and \`ollama/minimax-m3:cloud\` \`docx-create\` (5.02s fail → 6.86s
+  fail, reproduced). One of these re-measured cards, the gpt-oss docx-table, flipped to a
+  published pass — a non-timeout failure that survived re-run was confirmed genuine. Timeout
+  failures (300s) were also re-run and confirmed to be quota stalls; the numbers below are
+  the post-upgrade values.
 - ${colorNote}
 `
 }
@@ -212,7 +216,7 @@ Models the roster intended to include but that never produced a scored run:
 ${UNAVAILABLE.map((u) => `- **${u.model}** — ${u.reason}`).join("\n")}
 `
 
-  const generatedAt = new Date().toISOString()
+  const generatedAt = all.length > 0 ? new Date(Math.max(...all.map((r) => new Date(r.startedAt).getTime()))).toISOString() : new Date().toISOString()
 
   return `# Office Tools Benchmark
 
