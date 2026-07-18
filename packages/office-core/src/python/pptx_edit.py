@@ -60,6 +60,12 @@ def replace_in_frame(shape, anchor, text, target):
             return
 
 
+# OOXML relationships namespace. Checked by prefix rather than an enumerated attribute list
+# (r:id/r:embed/r:link) because SmartArt's <dgm:relIds> uses r:dm/r:lo/r:qs/r:cs — same
+# namespace, different local names — and would otherwise slip past the guard below.
+R_NS = "{http://schemas.openxmlformats.org/officeDocument/2006/relationships}"
+
+
 def copy_slide(prs, source):
     new_slide = prs.slides.add_slide(source.slide_layout)
     for shape in list(new_slide.shapes):
@@ -79,6 +85,21 @@ def copy_slide(prs, source):
         new_slide.shapes._spTree.append(el)
     if source.has_notes_slide:
         new_slide.notes_slide.notes_text_frame.text = source.notes_slide.notes_text_frame.text
+
+    # Fail loud on content duplicate_slide cannot copy safely: any relationship-bearing
+    # attribute (chart parts, SmartArt data, OLE objects, external links, hyperlinks, ...)
+    # that didn't get remapped above still points at a relationship id that doesn't exist on
+    # the new slide's part. Raised before returning — apply_one/main never reach prs.save(),
+    # so the batch aborts and the file on disk is untouched.
+    for el in new_slide.shapes._spTree.iter():
+        for name, value in el.attrib.items():
+            if name.startswith(R_NS) and value not in new_slide.part.rels:
+                tag = el.tag.rsplit("}", 1)[-1]
+                raise WorkerError(
+                    "UNSUPPORTED_SLIDE_CONTENT",
+                    f"Slide contains content duplicate_slide cannot copy safely ({tag})",
+                    "Charts, SmartArt, and embedded objects are not yet supported by duplicate_slide. Edit the original slide, or delete/replace the unsupported element first.",
+                )
     return new_slide
 
 

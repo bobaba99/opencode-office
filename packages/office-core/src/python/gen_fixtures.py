@@ -5,6 +5,8 @@ import sys
 from docx import Document
 from docx.oxml.ns import qn
 from pptx import Presentation
+from pptx.chart.data import CategoryChartData
+from pptx.enum.chart import XL_CHART_TYPE
 from pptx.util import Inches
 from PIL import Image as PILImage
 
@@ -100,6 +102,11 @@ def make_edit_pptx(path):
     buf.seek(0)
     s3 = prs.slides.add_slide(prs.slide_layouts[6])
     s3.shapes.add_picture(buf, Inches(1), Inches(1))
+    chart_data = CategoryChartData()
+    chart_data.categories = ["A", "B"]
+    chart_data.add_series("S1", (1.0, 2.0))
+    s4 = prs.slides.add_slide(prs.slide_layouts[6])
+    s4.shapes.add_chart(XL_CHART_TYPE.COLUMN_CLUSTERED, Inches(1), Inches(1), Inches(4), Inches(3), chart_data)
     prs.save(path)
 
 

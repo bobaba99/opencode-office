@@ -36,14 +36,26 @@ test("insert_slide lands directly after the reference slide with theme layout", 
     { op: "insert_slide", after: "s:0", layout: "Title and Content", title: "Agenda", bullets: ["One", "Two"] },
   ])
   const after = await readPptx(WORK, "outline")
-  expect(after.slides.map((s) => s.title)).toEqual(["Edit Deck", "Agenda", "Points", ""])
+  expect(after.slides.map((s) => s.title)).toEqual(["Edit Deck", "Agenda", "Points", "", ""])
   expect(after.slides[1].layout).toBe("Title and Content")
 })
 
 test("duplicate_slide copies a picture slide without breaking the file", async () => {
   await editPptx(WORK, [{ op: "duplicate_slide", target: "s:2" }])
   const after = await readPptx(WORK, "outline")
-  expect(after.slides).toHaveLength(4)
+  expect(after.slides).toHaveLength(5)
+})
+
+test("duplicate_slide on a chart slide fails with UNSUPPORTED_SLIDE_CONTENT, file unchanged", async () => {
+  const before = await readPptx(WORK, "content")
+  try {
+    await editPptx(WORK, [{ op: "duplicate_slide", target: "s:3" }])
+    expect.unreachable()
+  } catch (e) {
+    expect((e as OfficeError).code).toBe("UNSUPPORTED_SLIDE_CONTENT")
+  }
+  const after = await readPptx(WORK, "content")
+  expect(after.slides).toEqual(before.slides)
 })
 
 test("delete_slide and move_slide restructure the deck", async () => {
@@ -52,7 +64,7 @@ test("delete_slide and move_slide restructure the deck", async () => {
     { op: "move_slide", target: "s:1", index: 0 },
   ])
   const after = await readPptx(WORK, "outline")
-  expect(after.slides.map((s) => s.title)).toEqual(["Points", "Edit Deck"])
+  expect(after.slides.map((s) => s.title)).toEqual(["Points", "Edit Deck", ""])
 })
 
 test("duplicate + replace_image: bytes swap on the copy, original untouched", async () => {

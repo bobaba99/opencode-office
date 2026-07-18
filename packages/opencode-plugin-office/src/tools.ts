@@ -41,6 +41,30 @@ const PPTX_OPS = new Set<string>(PPTX_OP_NAMES)
 // Checked so a MISSING anchor fails fast here too, not only a present-but-empty one.
 const REQUIRED_ANCHOR_OPS = new Set<string>(["replace_text", "delete_element", "set_style", "set_shape_text"])
 
+// Per-op required fields beyond the id (target/after) and `anchor` — both of which are
+// already validated above with their own, more specific error codes (BAD_ARGS/BAD_ID and
+// BAD_ANCHOR respectively). Missing/mistyped fields here would otherwise reach the Python
+// worker and surface as an opaque KeyError deep inside a file mutation instead of a clean
+// error before ctx.ask.
+//
+// "string" allows "" (legitimate for text content, e.g. clearing a shape/note to empty).
+// "nonEmptyString" is for name/path-like fields (a style/layout name, an image path) where ""
+// can never be valid and would otherwise fail deeper with a less direct Python-side error.
+type FieldType = "string" | "nonEmptyString" | "int"
+const REQUIRED_FIELDS: Record<string, Record<string, FieldType>> = {
+  // docx
+  replace_text: { text: "string" },
+  insert_content: { markdown: "string" },
+  set_style: { style: "nonEmptyString" },
+  set_table_cell: { row: "int", col: "int", text: "string" },
+  // pptx
+  set_shape_text: { text: "string" },
+  set_notes: { text: "string" },
+  insert_slide: { layout: "nonEmptyString" },
+  move_slide: { index: "int" },
+  replace_image: { image: "nonEmptyString" },
+}
+
 // office-core throws OfficeError with `message` and `hint` as separate fields. Some hosts only
 // surface `error.message` to the model, which would silently drop the hint — and the whole
 // error-recovery workflow in SKILL.md ("follow every error hint") depends on it being visible.
@@ -108,6 +132,25 @@ function validateOperations(ext: "docx" | "pptx", operations: unknown): Record<s
       )
     }
     parseId(id)
+
+    const requiredFields = REQUIRED_FIELDS[op]
+    if (requiredFields) {
+      for (const [fieldName, type] of Object.entries(requiredFields)) {
+        const value = el[fieldName]
+        const valid =
+          type === "int"
+            ? typeof value === "number" && Number.isInteger(value)
+            : typeof value === "string" && (type === "string" || value.length > 0)
+        if (!valid) {
+          const expected = type === "int" ? "an integer" : type === "nonEmptyString" ? "a non-empty string" : "a string"
+          throw new OfficeError(
+            "BAD_ARGS",
+            `op ${op} is missing or has invalid field ${fieldName} (expected ${expected})`,
+            "See the operations catalog in the office-tools skill for each op's required fields.",
+          )
+        }
+      }
+    }
 
     if (REQUIRED_ANCHOR_OPS.has(op) && !("anchor" in el)) {
       throw new OfficeError("BAD_ANCHOR", `${op} requires an anchor`, "Copy the exact current text from office_read as the anchor.")

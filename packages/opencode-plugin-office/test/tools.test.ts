@@ -131,6 +131,28 @@ test("missing target id fails BAD_ARGS before ask", async () => {
   expect(askCalls).toBe(0)
 })
 
+test("office_edit missing a required op field fails BAD_ARGS before ask", async () => {
+  let askCalls = 0
+  const spyCtx = makeCtx({
+    ask: async () => {
+      askCalls++
+    },
+  })
+  try {
+    await officeTools.office_edit.execute(
+      {
+        file: path.join(FIXTURE_DIR, "report.docx"),
+        operations: [{ op: "replace_text", target: "p:0", anchor: "x" }],
+      } as never,
+      spyCtx,
+    )
+    expect.unreachable()
+  } catch (e) {
+    expect((e as OfficeError).code).toBe("BAD_ARGS")
+  }
+  expect(askCalls).toBe(0)
+})
+
 test("malformed target id fails BAD_ID before ask", async () => {
   let askCalls = 0
   const spyCtx = makeCtx({

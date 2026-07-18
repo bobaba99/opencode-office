@@ -303,11 +303,11 @@ export async function checkPptxImage(arena: string): Promise<CardScore> {
     return fail([`could not read/probe ${file}: ${e instanceof Error ? e.message : String(e)}`])
   }
 
-  if (outline.slides.length !== 4) {
-    notes.push(`expected 4 slides, got ${outline.slides.length}`)
+  if (outline.slides.length !== 5) {
+    notes.push(`expected 5 slides, got ${outline.slides.length}`)
   }
   const duplicate = probe.pictures.find((p) => p.id === "s:3/sh:0")
-  if (outline.slides.length === 4 && duplicate?.sha256 === swapHash) {
+  if (outline.slides.length === 5 && duplicate?.sha256 === swapHash) {
     success = true
   } else {
     notes.push(`s:3/sh:0 sha mismatch: got ${duplicate?.sha256}, expected ${swapHash}`)
