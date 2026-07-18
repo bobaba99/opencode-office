@@ -72,7 +72,8 @@ test("anchor mismatch aborts the whole batch atomically", async () => {
     expect.unreachable()
   } catch (e) {
     expect((e as OfficeError).code).toBe("ANCHOR_MISMATCH")
-    expect((e as OfficeError).hint).toContain("Growth")
+    expect((e as OfficeError).hint).toContain("Expansion")
+    expect((e as OfficeError).hint).toContain("rolled back")
   }
   const after = await readDocx(WORK, "content")
   expect(after.elements).toEqual(before.elements)

@@ -29,13 +29,12 @@ def require(index, op_name, target, kinds):
     return prefix, element
 
 
-def check_anchor(current, anchor, target, original=None):
+def check_anchor(current, anchor, target):
     if anchor not in current:
-        display = original if original else current
         raise WorkerError(
             "ANCHOR_MISMATCH",
             f"Anchor not found at {target}",
-            f"Element currently reads: {display[:300]!r} — update the anchor to match, or re-read the file.",
+            f"At this point in the batch the element reads: {current[:300]!r}. The batch was rolled back — nothing was written; re-read the file and retry with corrected ops.",
         )
 
 
@@ -57,14 +56,13 @@ def add_styled_paragraph(doc, text, style):
         )
 
 
-def apply_one(doc, op, original_states=None):
+def apply_one(doc, op):
     kind = op["op"]
     index = build_index(doc)
     if kind == "replace_text":
         _, el = require(index, kind, op["target"], ["p"])
         current = para_text(el)
-        original = original_states.get(op["target"]) if original_states else None
-        check_anchor(current, op["anchor"], op["target"], original)
+        check_anchor(current, op["anchor"], op["target"])
         if current.count(op["anchor"]) > 1:
             raise WorkerError(
                 "AMBIGUOUS_ANCHOR",
@@ -85,16 +83,14 @@ def apply_one(doc, op, original_states=None):
     if kind == "delete_element":
         prefix, el = require(index, kind, op["target"], ["p", "tbl"])
         current = para_text(el) if prefix == "p" else render_table(el).split("\n")[0]
-        original = original_states.get(op["target"]) if original_states else None
-        check_anchor(current, op["anchor"], op["target"], original)
+        check_anchor(current, op["anchor"], op["target"])
         xml_el = el._p if prefix == "p" else el._tbl
         xml_el.getparent().remove(xml_el)
         return {"op": kind, "target": op["target"]}
     if kind == "set_style":
         _, el = require(index, kind, op["target"], ["p"])
         current = para_text(el)
-        original = original_states.get(op["target"]) if original_states else None
-        check_anchor(current, op["anchor"], op["target"], original)
+        check_anchor(current, op["anchor"], op["target"])
         try:
             el.style = doc.styles[op["style"]]
         except KeyError:
@@ -117,7 +113,7 @@ def apply_one(doc, op, original_states=None):
             raise WorkerError(
                 "ANCHOR_MISMATCH",
                 f"Cell ({op['row']},{op['col']}) of {op['target']} does not match anchor",
-                f"Cell currently reads: {el.cell(op['row'], op['col']).text[:300]!r}",
+                f"Cell currently reads: {el.cell(op['row'], op['col']).text[:300]!r}. The batch was rolled back — nothing was written; re-read the file and retry with corrected ops.",
             )
         el.cell(op["row"], op["col"]).text = op["text"]
         return {"op": kind, "target": op["target"]}
@@ -135,16 +131,7 @@ def main(payload):
     except Exception as e:
         raise WorkerError("FILE_OPEN", f"Could not open {path} as .docx: {e}", "Check the path; the file must be a .docx (not legacy .doc).")
 
-    # Store original element states for error messages
-    original_states = {}
-    for prefix, index, el in iter_blocks(doc):
-        el_id = f"{prefix}:{index}"
-        if prefix == "p":
-            original_states[el_id] = para_text(el)
-        elif prefix == "tbl":
-            original_states[el_id] = render_table(el).split("\n")[0]
-
-    results = [apply_one(doc, op, original_states) for op in payload["operations"]]
+    results = [apply_one(doc, op) for op in payload["operations"]]
     tmp = path + ".tmp-opencode-office"
     doc.save(tmp)
     os.replace(tmp, path)
