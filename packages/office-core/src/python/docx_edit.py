@@ -1,12 +1,10 @@
 import os
 
 from _worker import run, WorkerError
-from _docx_common import iter_blocks, render_table, flat_runs, docx_para_text
+from _docx_common import iter_blocks, render_table, flat_runs, docx_para_text, styled_line, add_styled_paragraph
 from _textops import RunSeq, replace_in_paragraph
 from docx import Document
 from docx.enum.style import WD_STYLE_TYPE
-
-MD_STYLES = [("### ", "Heading 3"), ("## ", "Heading 2"), ("# ", "Heading 1"), ("- ", "List Bullet")]
 
 
 def build_index(doc):
@@ -36,24 +34,6 @@ def check_anchor(current, anchor, target):
             "ANCHOR_MISMATCH",
             f"Anchor not found at {target}",
             f"At this point in the batch the element reads: {current[:300]!r}. The batch was rolled back — nothing was written; re-read the file and retry with corrected ops.",
-        )
-
-
-def styled_line(line):
-    for marker, style in MD_STYLES:
-        if line.startswith(marker):
-            return line[len(marker):], style
-    return line, None
-
-
-def add_styled_paragraph(doc, text, style):
-    try:
-        return doc.add_paragraph(text, style=style) if style else doc.add_paragraph(text)
-    except KeyError:
-        raise WorkerError(
-            "STYLE_NOT_FOUND",
-            f"Style {style!r} does not exist in this document",
-            "Only styles the document defines can be used; # / ## / ### / - map to Heading 1-3 / List Bullet.",
         )
 
 

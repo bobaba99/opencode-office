@@ -1,8 +1,11 @@
+from _worker import WorkerError
 from docx.oxml.ns import qn
 from docx.table import Table
 from docx.text.hyperlink import Hyperlink
 from docx.text.paragraph import Paragraph
 from docx.text.run import Run
+
+MD_STYLES = [("### ", "Heading 3"), ("## ", "Heading 2"), ("# ", "Heading 1"), ("- ", "List Bullet")]
 
 
 def iter_blocks(doc):
@@ -35,3 +38,21 @@ def flat_runs(p):
 
 def docx_para_text(p):
     return "".join(run.text or "" for run in flat_runs(p))
+
+
+def styled_line(line):
+    for marker, style in MD_STYLES:
+        if line.startswith(marker):
+            return line[len(marker):], style
+    return line, None
+
+
+def add_styled_paragraph(doc, text, style):
+    try:
+        return doc.add_paragraph(text, style=style) if style else doc.add_paragraph(text)
+    except KeyError:
+        raise WorkerError(
+            "STYLE_NOT_FOUND",
+            f"Style {style!r} does not exist in this document",
+            "Only styles the document defines can be used; # / ## / ### / - map to Heading 1-3 / List Bullet.",
+        )
