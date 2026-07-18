@@ -73,15 +73,19 @@ def copy_slide(prs, source):
     rid_map = {}
     for rid, rel in source.part.rels.items():
         if rel.is_external:
-            continue
-        if "image" in rel.reltype or "media" in rel.reltype:
+            # External rels (hyperlinks, and similar links to outside-the-package URLs) need no
+            # part copying — just an equivalent relationship on the new slide's part.
+            rid_map[rid] = new_slide.part.relate_to(rel.target_ref, rel.reltype, is_external=True)
+        elif "image" in rel.reltype or "media" in rel.reltype:
             rid_map[rid] = new_slide.part.relate_to(rel.target_part, rel.reltype)
     for shape in source.shapes:
         el = deepcopy(shape._element)
-        for blip in el.iter(qn("a:blip")):
-            embed = blip.get(qn("r:embed"))
-            if embed in rid_map:
-                blip.set(qn("r:embed"), rid_map[embed])
+        # Rewrite every r:*-namespace attribute whose value was remapped above — not just
+        # a:blip/r:embed. This also covers a:hlinkClick/a:hlinkHover r:id (text hyperlinks).
+        for descendant in el.iter():
+            for name, value in list(descendant.attrib.items()):
+                if name.startswith(R_NS) and value in rid_map:
+                    descendant.set(name, rid_map[value])
         new_slide.shapes._spTree.append(el)
     if source.has_notes_slide:
         new_slide.notes_slide.notes_text_frame.text = source.notes_slide.notes_text_frame.text

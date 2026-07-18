@@ -46,6 +46,17 @@ test("duplicate_slide copies a picture slide without breaking the file", async (
   expect(after.slides).toHaveLength(5)
 })
 
+test("duplicate_slide copies a slide with a text hyperlink without tripping the unsupported-content guard", async () => {
+  const before = await readPptx(WORK, "content", "s:1")
+  await editPptx(WORK, [{ op: "duplicate_slide", target: "s:1" }])
+  const after = await readPptx(WORK, "outline")
+  expect(after.slides).toHaveLength(5)
+  const copy = await readPptx(WORK, "content", "s:2")
+  expect(copy.slides[0].shapes!.map((sh) => sh.text).join("\n")).toBe(
+    before.slides[0].shapes!.map((sh) => sh.text).join("\n"),
+  )
+})
+
 test("duplicate_slide on a chart slide fails with UNSUPPORTED_SLIDE_CONTENT, file unchanged", async () => {
   const before = await readPptx(WORK, "content")
   try {

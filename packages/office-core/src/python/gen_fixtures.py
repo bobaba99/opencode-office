@@ -97,6 +97,9 @@ def make_edit_pptx(path):
     s2 = prs.slides.add_slide(prs.slide_layouts[1])
     s2.shapes.title.text = "Points"
     s2.placeholders[1].text = "First point\nSecond point"
+    para = s2.placeholders[1].text_frame.paragraphs[0]
+    run = para.runs[0]
+    run.hyperlink.address = "https://example.com"
     buf = io.BytesIO()
     PILImage.new("RGB", (64, 64), (200, 30, 30)).save(buf, format="PNG")
     buf.seek(0)
