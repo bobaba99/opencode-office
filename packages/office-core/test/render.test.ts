@@ -25,3 +25,8 @@ test.skipIf(!HAS_SOFFICE)("renders a single requested page of a document", async
   expect(result.pages).toHaveLength(1)
   expect(result.pages[0].path.endsWith("page-1.png")).toBe(true)
 }, 300_000)
+
+test.skipIf(!HAS_SOFFICE)("pages: [] renders nothing (distinct from omitted = all)", async () => {
+  const result = await renderOffice(path.join(FIXTURE_DIR, "deck.pptx"), { pages: [] })
+  expect(result.pages).toEqual([])
+}, 300_000)

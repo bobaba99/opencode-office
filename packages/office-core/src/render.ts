@@ -19,7 +19,7 @@ async function convertToPdf(soffice: string, file: string, profileDir: string, o
     proc.kill()
     setTimeout(() => proc.kill(9), 5_000).unref?.()
   }, timeoutMs)
-  const [stderr, code] = await Promise.all([new Response(proc.stderr).text(), proc.exited])
+  const [, stderr, code] = await Promise.all([new Response(proc.stdout).text(), new Response(proc.stderr).text(), proc.exited])
   clearTimeout(timer)
   if (timedOut)
     throw new OfficeError(
