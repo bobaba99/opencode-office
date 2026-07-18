@@ -6,6 +6,7 @@ edit even when the paragraph contains hyperlink runs.
 from _worker import run, WorkerError
 from _docx_common import flat_runs, iter_blocks
 from docx import Document
+from docx.oxml.ns import qn
 
 
 def main(payload):
@@ -26,7 +27,8 @@ def main(payload):
                 "docx_probe only supports paragraph targets.",
             )
         runs = [{"text": r.text or "", "bold": r.bold is True} for r in flat_runs(el)]
-        return {"runs": runs}
+        comment_refs = len(list(el._p.iter(qn("w:commentReference"))))
+        return {"runs": runs, "comment_refs": comment_refs}
 
     raise WorkerError("TARGET_NOT_FOUND", f"No element {target} in {path}", "IDs come from office_read output and shift after edits; re-read the file to refresh them.")
 

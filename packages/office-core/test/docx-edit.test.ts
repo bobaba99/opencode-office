@@ -170,6 +170,17 @@ test("replace inside a bold run preserves bold", async () => {
   expect(robust.bold).toBe(true)
 })
 
+test("cross-run replace preserves comment reference markers", async () => {
+  const before = await readDocx(WORK, "content")
+  const target = before.elements.find((e) => e.type === "paragraph" && e.text.includes("strong"))!
+  await editDocx(WORK, [{ op: "replace_text", target: target.id, anchor: "was strong this", text: "was solid this" }])
+  const probe = await runWorker<{ runs: unknown[]; comment_refs: number }>("docx_probe.py", {
+    file: WORK,
+    target: target.id,
+  })
+  expect(probe.comment_refs).toBe(1)
+})
+
 test("STYLE_NOT_FOUND lists available styles", async () => {
   try {
     await editDocx(WORK, [{ op: "set_style", target: "p:0", anchor: "Edit Playground", style: "No Such" }])
