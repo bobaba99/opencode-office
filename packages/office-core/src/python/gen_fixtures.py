@@ -43,6 +43,7 @@ def make_edit_docx(path):
     strong = p.add_run("strong")
     strong.bold = True
     p.add_run(" this quarter overall.")
+    doc.add_comment(runs=p.runs[:1], text="Verify this figure", author="Reviewer", initials="RV")
     doc.add_paragraph("Delete me entirely.")
     doc.add_paragraph("Style me.")
     table = doc.add_table(rows=2, cols=2)

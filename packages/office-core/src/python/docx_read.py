@@ -43,7 +43,12 @@ def main(payload):
             elements.append(entry)
     if target and not elements:
         raise WorkerError("TARGET_NOT_FOUND", f"No element {target} in {path}", "IDs come from office_read output and shift after edits; re-read the file to refresh them.")
-    return {"format": "docx", "mode": mode, "elements": elements}
+    result = {"format": "docx", "mode": mode, "elements": elements}
+    if mode == "full":
+        comments = [{"id": c.comment_id, "author": c.author, "text": c.text} for c in list(doc.comments)]
+        if comments:
+            result["comments"] = comments
+    return result
 
 
 run(main)

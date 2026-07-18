@@ -6,7 +6,7 @@ export type DocxElement =
   | { id: string; type: "paragraph"; style: string; text: string; tracked_insertions?: string[]; tracked_deletions?: string[] }
   | { id: string; type: "table"; rows: number; cols: number; text?: string }
 
-export type DocxRead = { format: "docx"; mode: string; elements: DocxElement[] }
+export type DocxRead = { format: "docx"; mode: string; elements: DocxElement[]; comments?: Array<{ id: number; author: string; text: string }> }
 
 export async function readDocx(
   file: string,
@@ -27,7 +27,7 @@ export async function readDocx(
 }
 
 export function formatDocxRead(result: DocxRead): string {
-  return result.elements
+  const elementLines = result.elements
     .map((el) =>
       el.type === "paragraph"
         ? `[${el.id}] (${el.style}) ${el.text}` +
@@ -36,4 +36,11 @@ export function formatDocxRead(result: DocxRead): string {
         : `[${el.id}] (table ${el.rows}x${el.cols})${el.text ? "\n" + el.text : ""}`,
     )
     .join("\n")
+
+  if (result.comments && result.comments.length > 0) {
+    const commentLines = result.comments.map((c) => `  [${c.id}] ${c.author}: ${c.text}`).join("\n")
+    return elementLines + "\n\nComments:\n" + commentLines
+  }
+
+  return elementLines
 }
