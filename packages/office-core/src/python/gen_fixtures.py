@@ -69,6 +69,20 @@ def make_edit_docx(path):
     del_run.append(del_text)
     dele.append(del_run)
     tracked._p.append(dele)
+    link_p = doc.add_paragraph("See ")
+    rid = link_p.part.relate_to(
+        "https://example.com",
+        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink",
+        is_external=True,
+    )
+    hyperlink = link_p._p.makeelement(qn("w:hyperlink"), {qn("r:id"): rid})
+    link_run = link_p._p.makeelement(qn("w:r"), {})
+    link_text = link_p._p.makeelement(qn("w:t"), {})
+    link_text.text = "the appendix"
+    link_run.append(link_text)
+    hyperlink.append(link_run)
+    link_p._p.append(hyperlink)
+    link_p.add_run(" for details.")
     doc.save(path)
 
 

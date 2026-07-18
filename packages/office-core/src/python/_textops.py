@@ -1,3 +1,8 @@
+class RunSeq:
+    def __init__(self, runs):
+        self.runs = runs
+
+
 def para_text(p):
     return "".join(run.text or "" for run in p.runs)
 
