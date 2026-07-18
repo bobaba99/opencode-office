@@ -1,3 +1,8 @@
+class RunSeq:
+    def __init__(self, runs):
+        self.runs = runs
+
+
 def para_text(p):
     return "".join(run.text or "" for run in p.runs)
 
@@ -21,6 +26,8 @@ def replace_in_paragraph(p, anchor, replacement):
         run_text = run.text or ""
         run_start, run_end = pos, pos + len(run_text)
         pos = run_end
+        if not run_text:
+            continue
         if run_end <= start or run_start >= end:
             continue
         head = run_text[: max(0, start - run_start)]

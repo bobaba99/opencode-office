@@ -4,6 +4,7 @@ import path from "node:path"
 import { OfficeError } from "../src/errors"
 import { editDocx } from "../src/docx/edit"
 import { readDocx } from "../src/docx/read"
+import { runWorker } from "../src/worker"
 import { FIXTURE_DIR, ensureFixtures } from "./fixtures"
 
 const WORK = path.join(FIXTURE_DIR, "work-report.docx")
@@ -146,5 +147,46 @@ test("unknown op yields UNKNOWN_OP", async () => {
     expect.unreachable()
   } catch (e) {
     expect((e as OfficeError).code).toBe("UNKNOWN_OP")
+  }
+})
+
+test("anchors spanning hyperlink text now match", async () => {
+  const before = await readDocx(WORK, "content")
+  const link = before.elements.find((e) => e.type === "paragraph" && e.text.includes("appendix"))!
+  await editDocx(WORK, [{ op: "replace_text", target: link.id, anchor: "the appendix", text: "appendix B" }])
+  const after = await readDocx(WORK, "content", link.id)
+  expect((after.elements[0] as { text: string }).text).toBe("See appendix B for details.")
+})
+
+test("replace inside a bold run preserves bold", async () => {
+  const before = await readDocx(WORK, "content")
+  const target = before.elements.find((e) => e.type === "paragraph" && e.text.includes("strong"))!
+  await editDocx(WORK, [{ op: "replace_text", target: target.id, anchor: "strong", text: "robust" }])
+  const probe = await runWorker<{ runs: Array<{ text: string; bold: boolean }> }>("docx_probe.py", {
+    file: WORK,
+    target: target.id,
+  })
+  const robust = probe.runs.find((r) => r.text.includes("robust"))!
+  expect(robust.bold).toBe(true)
+})
+
+test("cross-run replace preserves comment reference markers", async () => {
+  const before = await readDocx(WORK, "content")
+  const target = before.elements.find((e) => e.type === "paragraph" && e.text.includes("strong"))!
+  await editDocx(WORK, [{ op: "replace_text", target: target.id, anchor: "was strong this", text: "was solid this" }])
+  const probe = await runWorker<{ runs: unknown[]; comment_refs: number }>("docx_probe.py", {
+    file: WORK,
+    target: target.id,
+  })
+  expect(probe.comment_refs).toBe(1)
+})
+
+test("STYLE_NOT_FOUND lists available styles", async () => {
+  try {
+    await editDocx(WORK, [{ op: "set_style", target: "p:0", anchor: "Edit Playground", style: "No Such" }])
+    expect.unreachable()
+  } catch (e) {
+    expect((e as OfficeError).code).toBe("STYLE_NOT_FOUND")
+    expect((e as OfficeError).hint).toContain("Heading 1")
   }
 })

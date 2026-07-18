@@ -92,3 +92,12 @@ test("full mode surfaces tracked insertions; content mode does not", async () =>
     expect(el.type === "paragraph" ? (el as { tracked_insertions?: string[] }).tracked_insertions : undefined).toBeUndefined()
   }
 })
+
+test("full mode lists document comments; content mode does not", async () => {
+  const EDIT = path.join(FIXTURE_DIR, "edit-report.docx")
+  const full = await readDocx(EDIT, "full")
+  expect(full.comments).toEqual([{ id: 0, author: "Reviewer", text: "Verify this figure" }])
+  expect(formatDocxRead(full)).toContain("Reviewer: Verify this figure")
+  const content = await readDocx(EDIT, "content")
+  expect(content.comments).toBeUndefined()
+})

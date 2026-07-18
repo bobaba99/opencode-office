@@ -33,12 +33,12 @@ function assertPptxId(id: string, op: string): void {
 export async function editPptx(
   file: string,
   operations: PptxOperation[],
-  opts?: { backup?: boolean; cacheDir?: string },
+  opts?: { backup?: boolean; cacheDir?: string; timeoutMs?: number },
 ): Promise<EditResult> {
   for (const operation of operations) {
     assertPptxId("target" in operation ? operation.target : operation.after, operation.op)
   }
   const backup = opts?.backup === false ? undefined : await backupFile(file, opts?.cacheDir)
-  const data = await runWorker<Omit<EditResult, "backup">>("pptx_edit.py", { file, operations }, opts)
+  const data = await runWorker<Omit<EditResult, "backup">>("pptx_edit.py", { file, operations }, { timeoutMs: opts?.timeoutMs, cacheDir: opts?.cacheDir })
   return { ...data, backup }
 }

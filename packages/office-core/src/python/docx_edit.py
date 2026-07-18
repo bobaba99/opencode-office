@@ -1,11 +1,10 @@
 import os
 
 from _worker import run, WorkerError
-from _docx_common import iter_blocks, render_table
-from _textops import para_text, replace_in_paragraph
+from _docx_common import iter_blocks, render_table, flat_runs, docx_para_text, styled_line, add_styled_paragraph
+from _textops import RunSeq, replace_in_paragraph
 from docx import Document
-
-MD_STYLES = [("### ", "Heading 3"), ("## ", "Heading 2"), ("# ", "Heading 1"), ("- ", "List Bullet")]
+from docx.enum.style import WD_STYLE_TYPE
 
 
 def build_index(doc):
@@ -38,30 +37,12 @@ def check_anchor(current, anchor, target):
         )
 
 
-def styled_line(line):
-    for marker, style in MD_STYLES:
-        if line.startswith(marker):
-            return line[len(marker):], style
-    return line, None
-
-
-def add_styled_paragraph(doc, text, style):
-    try:
-        return doc.add_paragraph(text, style=style) if style else doc.add_paragraph(text)
-    except KeyError:
-        raise WorkerError(
-            "STYLE_NOT_FOUND",
-            f"Style {style!r} does not exist in this document",
-            "Only styles the document defines can be used; # / ## / ### / - map to Heading 1-3 / List Bullet.",
-        )
-
-
 def apply_one(doc, op):
     kind = op["op"]
     index = build_index(doc)
     if kind == "replace_text":
         _, el = require(index, kind, op["target"], ["p"])
-        current = para_text(el)
+        current = docx_para_text(el)
         check_anchor(current, op["anchor"], op["target"])
         if current.count(op["anchor"]) > 1:
             raise WorkerError(
@@ -69,8 +50,8 @@ def apply_one(doc, op):
                 f"Anchor occurs more than once in {op['target']}",
                 "Extend the anchor with surrounding text until it is unique within the element.",
             )
-        replace_in_paragraph(el, op["anchor"], op["text"])
-        return {"op": kind, "target": op["target"], "text_after": para_text(el)}
+        replace_in_paragraph(RunSeq(flat_runs(el)), op["anchor"], op["text"])
+        return {"op": kind, "target": op["target"], "text_after": docx_para_text(el)}
     if kind == "insert_content":
         _, el = require(index, kind, op["after"], ["p", "tbl"])
         anchor_el = el._p if hasattr(el, "_p") else el._tbl
@@ -82,22 +63,29 @@ def apply_one(doc, op):
         return {"op": kind, "after": op["after"]}
     if kind == "delete_element":
         prefix, el = require(index, kind, op["target"], ["p", "tbl"])
-        current = para_text(el) if prefix == "p" else render_table(el).split("\n")[0]
+        current = docx_para_text(el) if prefix == "p" else render_table(el).split("\n")[0]
         check_anchor(current, op["anchor"], op["target"])
         xml_el = el._p if prefix == "p" else el._tbl
         xml_el.getparent().remove(xml_el)
         return {"op": kind, "target": op["target"]}
     if kind == "set_style":
         _, el = require(index, kind, op["target"], ["p"])
-        current = para_text(el)
+        current = docx_para_text(el)
         check_anchor(current, op["anchor"], op["target"])
         try:
             el.style = doc.styles[op["style"]]
         except KeyError:
+            available = [s.name for s in doc.styles if s.type == WD_STYLE_TYPE.PARAGRAPH]
             raise WorkerError(
                 "STYLE_NOT_FOUND",
                 f"Style {op['style']!r} does not exist in this document",
-                "office_read shows each paragraph's style; only styles the document defines can be applied.",
+                f"Available paragraph styles: {', '.join(available[:25])}",
+            )
+        except ValueError:
+            raise WorkerError(
+                "STYLE_NOT_FOUND",
+                f"Style {op['style']!r} exists but is not a paragraph style",
+                f"{op['style']!r} exists in this document but is not a paragraph style; it cannot be applied to a paragraph.",
             )
         return {"op": kind, "target": op["target"]}
     if kind == "set_table_cell":
@@ -133,8 +121,12 @@ def main(payload):
 
     results = [apply_one(doc, op) for op in payload["operations"]]
     tmp = path + ".tmp-opencode-office"
-    doc.save(tmp)
-    os.replace(tmp, path)
+    try:
+        doc.save(tmp)
+        os.replace(tmp, path)
+    finally:
+        if os.path.exists(tmp):
+            os.remove(tmp)
     return {"applied": len(results), "results": results}
 
 
