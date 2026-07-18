@@ -133,8 +133,12 @@ def main(payload):
 
     results = [apply_one(doc, op) for op in payload["operations"]]
     tmp = path + ".tmp-opencode-office"
-    doc.save(tmp)
-    os.replace(tmp, path)
+    try:
+        doc.save(tmp)
+        os.replace(tmp, path)
+    finally:
+        if os.path.exists(tmp):
+            os.remove(tmp)
     return {"applied": len(results), "results": results}
 
 

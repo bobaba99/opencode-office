@@ -25,12 +25,12 @@ function assertDocxId(id: string): void {
 export async function editDocx(
   file: string,
   operations: DocxOperation[],
-  opts?: { backup?: boolean; cacheDir?: string },
+  opts?: { backup?: boolean; cacheDir?: string; timeoutMs?: number },
 ): Promise<EditResult> {
   for (const operation of operations) {
     assertDocxId("target" in operation ? operation.target : operation.after)
   }
   const backup = opts?.backup === false ? undefined : await backupFile(file, opts?.cacheDir)
-  const data = await runWorker<Omit<EditResult, "backup">>("docx_edit.py", { file, operations }, opts)
+  const data = await runWorker<Omit<EditResult, "backup">>("docx_edit.py", { file, operations }, { timeoutMs: opts?.timeoutMs, cacheDir: opts?.cacheDir })
   return { ...data, backup }
 }

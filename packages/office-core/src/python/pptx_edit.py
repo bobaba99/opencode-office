@@ -185,8 +185,12 @@ def main(payload):
         raise WorkerError("FILE_OPEN", f"Could not open {path} as .pptx: {e}", "Check the path; the file must be a .pptx (not legacy .ppt).")
     results = [apply_one(prs, op) for op in payload["operations"]]
     tmp = path + ".tmp-opencode-office"
-    prs.save(tmp)
-    os.replace(tmp, path)
+    try:
+        prs.save(tmp)
+        os.replace(tmp, path)
+    finally:
+        if os.path.exists(tmp):
+            os.remove(tmp)
     return {"applied": len(results), "results": results}
 
 

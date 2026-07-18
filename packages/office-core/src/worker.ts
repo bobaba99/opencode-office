@@ -26,9 +26,14 @@ export async function runWorker<T>(
   const timer = setTimeout(() => {
     timedOut = true
     proc.kill()
+    setTimeout(() => proc.kill(9), 5_000).unref?.()
   }, timeoutMs)
-  proc.stdin.write(JSON.stringify(payload))
-  await proc.stdin.end()
+  try {
+    proc.stdin.write(JSON.stringify(payload))
+    await proc.stdin.end()
+  } catch {
+    // worker died before consuming stdin; the exit-code path below reports it
+  }
   const [stdout, stderr, code] = await Promise.all([
     new Response(proc.stdout).text(),
     new Response(proc.stderr).text(),

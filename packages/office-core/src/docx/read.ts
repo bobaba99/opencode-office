@@ -12,7 +12,7 @@ export async function readDocx(
   file: string,
   mode: "outline" | "content" | "full",
   target?: string,
-  opts?: { cacheDir?: string },
+  opts?: { cacheDir?: string; timeoutMs?: number },
 ): Promise<DocxRead> {
   if (target !== undefined) {
     const ref = parseId(target)
@@ -23,7 +23,7 @@ export async function readDocx(
         "docx targets use p:<n> or tbl:<n> — get IDs from office_read output for this file.",
       )
   }
-  return runWorker<DocxRead>("docx_read.py", { file, mode, target }, opts)
+  return runWorker<DocxRead>("docx_read.py", { file, mode, target }, { timeoutMs: opts?.timeoutMs, cacheDir: opts?.cacheDir })
 }
 
 export function formatDocxRead(result: DocxRead): string {

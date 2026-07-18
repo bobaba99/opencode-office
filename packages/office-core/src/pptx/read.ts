@@ -10,7 +10,7 @@ export async function readPptx(
   file: string,
   mode: "outline" | "content",
   target?: string,
-  opts?: { cacheDir?: string },
+  opts?: { cacheDir?: string; timeoutMs?: number },
 ): Promise<PptxRead> {
   if (target !== undefined) {
     const ref = parseId(target)
@@ -21,7 +21,7 @@ export async function readPptx(
         "pptx targets use s:<n> or s:<n>/sh:<m> — get IDs from office_read output for this file.",
       )
   }
-  return runWorker<PptxRead>("pptx_read.py", { file, mode, target }, opts)
+  return runWorker<PptxRead>("pptx_read.py", { file, mode, target }, { timeoutMs: opts?.timeoutMs, cacheDir: opts?.cacheDir })
 }
 
 export function formatPptxRead(result: PptxRead): string {
