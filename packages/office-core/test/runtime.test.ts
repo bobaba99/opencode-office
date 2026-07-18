@@ -4,8 +4,8 @@ import { rm, mkdir, utimes } from "node:fs/promises"
 import path from "node:path"
 import { PINNED, ensureVenv, venvIsCurrent, acquireLock } from "../src/runtime"
 
-test("pins the three required packages", () => {
-  expect(Object.keys(PINNED).sort()).toEqual(["pillow", "python-docx", "python-pptx"])
+test("pins the required packages", () => {
+  expect(Object.keys(PINNED).sort()).toEqual(["pillow", "pymupdf", "python-docx", "python-pptx"])
 })
 
 test("venvIsCurrent is false for a directory with no venv", async () => {

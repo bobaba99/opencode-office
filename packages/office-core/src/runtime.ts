@@ -8,6 +8,7 @@ export const PINNED: Record<string, string> = {
   "python-docx": "1.2.0",
   "python-pptx": "1.0.2",
   pillow: "11.3.0",
+  pymupdf: "1.26.3",
 }
 
 export function defaultCacheDir(): string {
@@ -42,6 +43,22 @@ async function run(cmd: string[]): Promise<{ code: number; stderr: string }> {
 async function which(bin: string): Promise<boolean> {
   const probe = process.platform === "win32" ? ["where", bin] : ["which", bin]
   return (await run(probe)).code === 0
+}
+
+const SOFFICE_CANDIDATES = ["/opt/homebrew/bin/soffice", "/Applications/LibreOffice.app/Contents/MacOS/soffice", "/usr/bin/soffice"]
+
+export async function findSoffice(): Promise<string | null> {
+  const probe = process.platform === "win32" ? ["where", "soffice"] : ["which", "soffice"]
+  const proc = Bun.spawn(probe, { stdout: "pipe", stderr: "pipe" })
+  const [code, stdout] = await Promise.all([proc.exited, new Response(proc.stdout).text()])
+  if (code === 0) {
+    const resolved = stdout.split("\n")[0]?.trim()
+    if (resolved) return resolved
+  }
+  for (const candidate of SOFFICE_CANDIDATES) {
+    if (existsSync(candidate)) return candidate
+  }
+  return null
 }
 
 async function checkVersion(python: string): Promise<void> {
@@ -96,6 +113,9 @@ export async function ensureVenv(cacheDir = defaultCacheDir()): Promise<string> 
   try {
     if (await venvIsCurrent(venvDir)) return python
     await mkdir(cacheDir, { recursive: true })
+    // A stale venv (fingerprint mismatch from a PINNED change) must be cleared first —
+    // `uv venv` refuses to create over an existing directory without --clear.
+    await rm(venvDir, { recursive: true, force: true })
     const pkgs = Object.entries(PINNED).map(([name, version]) => `${name}==${version}`)
     if (await which("uv")) {
       const created = await run(["uv", "venv", venvDir])
