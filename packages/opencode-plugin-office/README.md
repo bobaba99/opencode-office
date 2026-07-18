@@ -38,7 +38,7 @@ provisioning and LibreOffice discovery paths in `@opencode-office/core` assume a
 pinned `@opencode-ai/plugin@1.18.3`. Copy it into an opencode skills directory yourself:
 
 ```sh
-cp skill/SKILL.md ~/.config/opencode/skill/office-tools/SKILL.md
+mkdir -p ~/.config/opencode/skills/office-tools && cp skill/SKILL.md ~/.config/opencode/skills/office-tools/SKILL.md
 ```
 
 **Why this can't be automated:** this plugin exports the v1 `Plugin` shape
