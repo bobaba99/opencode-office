@@ -14,6 +14,12 @@ const OUT_FILE = path.join(import.meta.dir, "..", "docs", "BENCHMARK.md")
 const CARD_ORDER = CARDS.map((c) => c.id)
 const FULL_BATTERY = CARD_ORDER.length // 8
 
+// Kept as a constant (rather than only hand-edited into docs/BENCHMARK.md) so a future
+// `bun eval/report.ts` regeneration doesn't silently drop this caveat — the numbers below
+// predate the release-prep fixture/prompt changes and should not be read as current.
+const PRE_RELEASE_PREP_NOTE =
+  "**2026-07-18.** Results measured against the pre-release-prep harness (fixtures/prompts changed in release prep); re-run required before publishing updated numbers."
+
 // Models attempted but never produced a scored card: no results file, no data to lie with.
 // Hardcoded because "unavailable" is not a fact that lives in eval/results/*.json — there is
 // no JSON to auto-classify it from.
@@ -168,6 +174,7 @@ function renderMethodSection(complete: ModelResults[]): string {
   failures (300s) were also re-run and confirmed to be quota stalls; the numbers below are
   the post-upgrade values.
 - ${colorNote}
+- ${PRE_RELEASE_PREP_NOTE}
 `
 }
 

@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import { existsSync } from "node:fs"
 import { rm, mkdir, utimes } from "node:fs/promises"
 import path from "node:path"
+import type { OfficeError } from "../src/errors"
 import { PINNED, ensureVenv, venvIsCurrent, acquireLock } from "../src/runtime"
 
 test("pins the required packages", () => {
@@ -56,4 +57,25 @@ test("acquireLock with a missing parent resolves quickly instead of spinning", a
   const release = await acquireLock(dir, { timeoutMs: 5_000 })
   expect(Date.now() - start).toBeLessThan(2_000)
   await release()
+})
+
+test("acquireLock honors a caller staleMs larger than the default: a 400s-old lock is not stolen when staleMs is 600s", async () => {
+  // Regresses render.ts's bug: acquireLock was called with a derived timeoutMs but a
+  // hardcoded default staleMs (300_000), so a long-running conversion's still-ACTIVE lock
+  // could be stolen out from under it once it crossed 300s. Here the lock is 400s old —
+  // older than the 300s default — but the caller passes staleMs: 600_000, so the lock must
+  // still be treated as active and the short timeoutMs must cause a LOCK_TIMEOUT instead of
+  // a steal.
+  const dir = "/tmp/oc-office-stale-honors-caller-test"
+  await rm(dir + ".lock", { recursive: true, force: true })
+  await mkdir(dir + ".lock", { recursive: true })
+  const old = new Date(Date.now() - 400_000)
+  await utimes(dir + ".lock", old, old)
+  try {
+    await acquireLock(dir, { staleMs: 600_000, timeoutMs: 1_500 })
+    expect.unreachable()
+  } catch (e) {
+    expect((e as OfficeError).code).toBe("LOCK_TIMEOUT")
+  }
+  await rm(dir + ".lock", { recursive: true, force: true })
 })

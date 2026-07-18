@@ -95,3 +95,4 @@ Models the roster intended to include but that never produced a scored run:
   failures (300s) were also re-run and confirmed to be quota stalls; the numbers below are
   the post-upgrade values.
 - `ollama/gpt-oss:120b-cloud` is the clearest example the battery has produced: it passed `docx-replace`'s text change (the sentence reads correctly) but the fidelity probe caught it destroying the paragraph's comment reference marker in the process (`comment_refs expected 1, got 0`). Task success alone would have scored this a clean pass — exactly the class of damage this battery exists to detect.
+- **2026-07-18.** Results measured against the pre-release-prep harness (fixtures/prompts changed in release prep); re-run required before publishing updated numbers.

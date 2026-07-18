@@ -60,6 +60,13 @@ def replace_in_frame(shape, anchor, text, target):
             return
 
 
+# OOXML relationships namespace. Checked by prefix rather than an enumerated attribute list
+# (r:id/r:embed/r:link) because SmartArt's <dgm:relIds> uses r:dm/r:lo/r:qs/r:cs — same
+# namespace, different local names — and would otherwise slip past the remap-or-raise pass
+# in copy_slide below.
+R_NS = "{http://schemas.openxmlformats.org/officeDocument/2006/relationships}"
+
+
 def copy_slide(prs, source):
     new_slide = prs.slides.add_slide(source.slide_layout)
     for shape in list(new_slide.shapes):
@@ -67,15 +74,46 @@ def copy_slide(prs, source):
     rid_map = {}
     for rid, rel in source.part.rels.items():
         if rel.is_external:
-            continue
-        if "image" in rel.reltype or "media" in rel.reltype:
+            # External rels (hyperlinks, and similar links to outside-the-package URLs) need no
+            # part copying — just an equivalent relationship on the new slide's part.
+            rid_map[rid] = new_slide.part.relate_to(rel.target_ref, rel.reltype, is_external=True)
+        elif "image" in rel.reltype or "media" in rel.reltype:
             rid_map[rid] = new_slide.part.relate_to(rel.target_part, rel.reltype)
     for shape in source.shapes:
         el = deepcopy(shape._element)
-        for blip in el.iter(qn("a:blip")):
-            embed = blip.get(qn("r:embed"))
-            if embed in rid_map:
-                blip.set(qn("r:embed"), rid_map[embed])
+        # Rewrite every r:*-namespace attribute whose value was remapped above — not just
+        # a:blip/r:embed. This also covers a:hlinkClick/a:hlinkHover r:id (text hyperlinks).
+        #
+        # The remap-or-raise decision is made in this single pass, keyed on the ORIGINAL
+        # (pre-rewrite) rId read straight off the deep-copied element. rIds are only unique
+        # per part: a source slide can mix an unsupported rel (e.g. a chart's rId2) with a
+        # supported one (e.g. an image's rId3, remapped here to a new rId2 on the new
+        # slide's part). Checking membership *after* rewriting — against the new part's rels
+        # — would let the chart's untouched, still-literal "rId2" collide with the image's
+        # brand-new "rId2" and read as present, silently corrupting the copy (the chart's
+        # relationship now resolves to the image part). Deciding per original rId, before any
+        # rewriting on this element happens, makes that collision impossible: every r:*
+        # reference is either remapped from rid_map or fatal, never left to a coincidental
+        # string match on the destination part.
+        for descendant in el.iter():
+            for name, value in list(descendant.attrib.items()):
+                if not name.startswith(R_NS):
+                    continue
+                if not value:
+                    # An empty r:* value is not a reference at all — e.g. PowerPoint action
+                    # buttons serialize r:id="" on their a:hlinkClick when the action is a
+                    # built-in slide jump (ppaction://hlinkshowjump?...) rather than a real
+                    # relationship. Nothing to remap and nothing unsupported; leave it as-is.
+                    continue
+                if value in rid_map:
+                    descendant.set(name, rid_map[value])
+                else:
+                    tag = descendant.tag.rsplit("}", 1)[-1]
+                    raise WorkerError(
+                        "UNSUPPORTED_SLIDE_CONTENT",
+                        f"Slide contains content duplicate_slide cannot copy safely ({tag})",
+                        "Charts, SmartArt, embedded objects, and internal slide-jump links are not yet supported by duplicate_slide. Edit the original slide, or delete/replace the unsupported element first.",
+                    )
         new_slide.shapes._spTree.append(el)
     if source.has_notes_slide:
         new_slide.notes_slide.notes_text_frame.text = source.notes_slide.notes_text_frame.text

@@ -36,14 +36,44 @@ test("insert_slide lands directly after the reference slide with theme layout", 
     { op: "insert_slide", after: "s:0", layout: "Title and Content", title: "Agenda", bullets: ["One", "Two"] },
   ])
   const after = await readPptx(WORK, "outline")
-  expect(after.slides.map((s) => s.title)).toEqual(["Edit Deck", "Agenda", "Points", ""])
+  expect(after.slides.map((s) => s.title)).toEqual(["Edit Deck", "Agenda", "Points", "", ""])
   expect(after.slides[1].layout).toBe("Title and Content")
 })
 
 test("duplicate_slide copies a picture slide without breaking the file", async () => {
   await editPptx(WORK, [{ op: "duplicate_slide", target: "s:2" }])
   const after = await readPptx(WORK, "outline")
-  expect(after.slides).toHaveLength(4)
+  expect(after.slides).toHaveLength(5)
+})
+
+test("duplicate_slide copies a slide with a text hyperlink without tripping the unsupported-content guard", async () => {
+  const before = await readPptx(WORK, "content", "s:1")
+  await editPptx(WORK, [{ op: "duplicate_slide", target: "s:1" }])
+  const after = await readPptx(WORK, "outline")
+  expect(after.slides).toHaveLength(5)
+  const copy = await readPptx(WORK, "content", "s:2")
+  expect(copy.slides[0].shapes!.map((sh) => sh.text).join("\n")).toBe(
+    before.slides[0].shapes!.map((sh) => sh.text).join("\n"),
+  )
+})
+
+test("duplicate_slide on a slide mixing a chart (unsupported) and a picture (supported) fails with UNSUPPORTED_SLIDE_CONTENT, file unchanged", async () => {
+  // s:3 mixes an unsupported rel (the chart) with a supported one (a picture) on the same
+  // slide — the regression case for the rId-collision guard. Confirm the probe still finds
+  // that picture at s:3 before duplicating, so a future fixture edit can't silently retarget
+  // this test at a slide that no longer has the chart+picture mix it's meant to exercise.
+  const probeBefore = await runWorker<ProbeResult>("pptx_probe.py", { file: WORK })
+  expect(probeBefore.pictures.some((p) => p.id === "s:3/sh:1")).toBe(true)
+
+  const before = await readPptx(WORK, "content")
+  try {
+    await editPptx(WORK, [{ op: "duplicate_slide", target: "s:3" }])
+    expect.unreachable()
+  } catch (e) {
+    expect((e as OfficeError).code).toBe("UNSUPPORTED_SLIDE_CONTENT")
+  }
+  const after = await readPptx(WORK, "content")
+  expect(after.slides).toEqual(before.slides)
 })
 
 test("delete_slide and move_slide restructure the deck", async () => {
@@ -52,7 +82,7 @@ test("delete_slide and move_slide restructure the deck", async () => {
     { op: "move_slide", target: "s:1", index: 0 },
   ])
   const after = await readPptx(WORK, "outline")
-  expect(after.slides.map((s) => s.title)).toEqual(["Points", "Edit Deck"])
+  expect(after.slides.map((s) => s.title)).toEqual(["Points", "Edit Deck", ""])
 })
 
 test("duplicate + replace_image: bytes swap on the copy, original untouched", async () => {

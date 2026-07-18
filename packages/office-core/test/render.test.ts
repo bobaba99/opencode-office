@@ -30,3 +30,16 @@ test.skipIf(!HAS_SOFFICE)("pages: [] renders nothing (distinct from omitted = al
   const result = await renderOffice(path.join(FIXTURE_DIR, "deck.pptx"), { pages: [] })
   expect(result.pages).toEqual([])
 }, 300_000)
+
+test.skipIf(!HAS_SOFFICE)("concurrent renders both succeed", async () => {
+  const [deckResult, reportResult] = await Promise.all([
+    renderOffice(path.join(FIXTURE_DIR, "deck.pptx"), { outDir: path.join(FIXTURE_DIR, "..", ".concurrent-out", "deck") }),
+    renderOffice(path.join(FIXTURE_DIR, "report.docx"), { pages: [1], outDir: path.join(FIXTURE_DIR, "..", ".concurrent-out", "report") }),
+  ])
+  expect(deckResult.pages.map((p) => p.page)).toEqual([1, 2])
+  for (const page of deckResult.pages) {
+    expect(existsSync(page.path)).toBe(true)
+  }
+  expect(reportResult.pages).toHaveLength(1)
+  expect(existsSync(reportResult.pages[0].path)).toBe(true)
+}, 600_000)

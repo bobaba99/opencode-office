@@ -5,6 +5,8 @@ import sys
 from docx import Document
 from docx.oxml.ns import qn
 from pptx import Presentation
+from pptx.chart.data import CategoryChartData
+from pptx.enum.chart import XL_CHART_TYPE
 from pptx.util import Inches
 from PIL import Image as PILImage
 
@@ -95,11 +97,32 @@ def make_edit_pptx(path):
     s2 = prs.slides.add_slide(prs.slide_layouts[1])
     s2.shapes.title.text = "Points"
     s2.placeholders[1].text = "First point\nSecond point"
+    para = s2.placeholders[1].text_frame.paragraphs[0]
+    run = para.runs[0]
+    run.hyperlink.address = "https://example.com"
+    # Action-button-style hyperlink with an EMPTY r:id: PowerPoint serializes r:id="" on
+    # a:hlinkClick when the action is a built-in slide jump (ppaction://hlinkshowjump?...)
+    # rather than a real external/internal relationship. Regresses the empty-r:*-value guard
+    # in pptx_edit.py's copy_slide — this must not trip UNSUPPORTED_SLIDE_CONTENT.
+    run2 = s2.placeholders[1].text_frame.paragraphs[1].runs[0]
+    from pptx.oxml.ns import qn as pptx_qn
+    rPr = run2._r.get_or_add_rPr()
+    hlink = rPr.makeelement(pptx_qn("a:hlinkClick"), {pptx_qn("r:id"): "", "action": "ppaction://hlinkshowjump?jump=nextslide"})
+    rPr.append(hlink)
     buf = io.BytesIO()
     PILImage.new("RGB", (64, 64), (200, 30, 30)).save(buf, format="PNG")
     buf.seek(0)
     s3 = prs.slides.add_slide(prs.slide_layouts[6])
     s3.shapes.add_picture(buf, Inches(1), Inches(1))
+    chart_data = CategoryChartData()
+    chart_data.categories = ["A", "B"]
+    chart_data.add_series("S1", (1.0, 2.0))
+    s4 = prs.slides.add_slide(prs.slide_layouts[6])
+    s4.shapes.add_chart(XL_CHART_TYPE.COLUMN_CLUSTERED, Inches(1), Inches(1), Inches(4), Inches(3), chart_data)
+    buf2 = io.BytesIO()
+    PILImage.new("RGB", (32, 32), (20, 160, 60)).save(buf2, format="PNG")
+    buf2.seek(0)
+    s4.shapes.add_picture(buf2, Inches(5), Inches(1))
     prs.save(path)
 
 

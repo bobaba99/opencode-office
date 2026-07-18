@@ -19,10 +19,24 @@ them well:
 
 The tools are built on `@opencode-office/core`, which drives `python-docx` / `python-pptx` /
 `pillow` / `pymupdf` in a managed Python venv, plus LibreOffice (`soffice`) for rendering.
+`@opencode-office/core` ships as TypeScript source (its `exports` map points straight at
+`.ts` files, no build step) — consumers must be able to execute TypeScript directly, as
+opencode and Bun do. Plain Node.js consumers are not supported for now.
 
 ## Install
 
-Add the plugin to your `opencode.json`:
+**From npm** (once published — this repo currently ships dry-run-verified packaging only, see
+[`docs/superpowers/plans`](docs/superpowers/plans) for status):
+
+```sh
+bun add opencode-plugin-office
+```
+
+**From a local checkout / workspace** (the only path available today): install/link the package
+wherever `opencode.json` resolves it from — opencode loads plugins from `node_modules` or a
+workspace path.
+
+Either way, reference the package by name in `opencode.json`:
 
 ```json
 {
@@ -30,17 +44,19 @@ Add the plugin to your `opencode.json`:
 }
 ```
 
-opencode loads plugins from `node_modules` (or a workspace path during local development), so
-the package must be installed/linked wherever `opencode.json` resolves it from.
-
-The skill isn't auto-registered yet, so copy it into an opencode skills directory yourself:
+The skill cannot be auto-registered by this plugin (see below), so copy it into an opencode
+skills directory yourself:
 
 ```sh
-cp packages/opencode-plugin-office/skill/SKILL.md ~/.config/opencode/skill/office-tools/SKILL.md
+mkdir -p ~/.config/opencode/skills/office-tools && cp packages/opencode-plugin-office/skill/SKILL.md ~/.config/opencode/skills/office-tools/SKILL.md
 ```
 
-Full install details, including the tracked future work to make skill registration automatic,
-live in [`packages/opencode-plugin-office/README.md`](packages/opencode-plugin-office/README.md).
+Full install details, including why skill auto-registration isn't possible with the installed
+`@opencode-ai/plugin` version, live in
+[`packages/opencode-plugin-office/README.md`](packages/opencode-plugin-office/README.md).
+
+**Platform:** developed and tested on macOS/Linux. Windows is untested — the Python venv
+provisioning and LibreOffice discovery paths assume a POSIX shell.
 
 ## Dependencies
 
@@ -73,3 +89,11 @@ caveat and refresh policy before treating close scores as a ranking.
 
 This table is copied by hand from `docs/BENCHMARK.md`, which is regenerated with
 `bun eval/report.ts`; re-copy it here after a regeneration if the numbers change.
+
+## Releasing
+
+Publish `@opencode-office/core` before `opencode-plugin-office` — the plugin depends on it via
+`workspace:*`, which npm rewrites to a concrete version range at publish time; publishing the
+plugin first would ship a dependency range the registry can't yet resolve. After bumping
+versions, run `bun install` so the workspace rewrite is reflected in a fresh `bun.lock` before
+publishing either package.

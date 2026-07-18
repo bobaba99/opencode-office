@@ -131,6 +131,28 @@ test("missing target id fails BAD_ARGS before ask", async () => {
   expect(askCalls).toBe(0)
 })
 
+test("office_edit missing a required op field fails BAD_ARGS before ask", async () => {
+  let askCalls = 0
+  const spyCtx = makeCtx({
+    ask: async () => {
+      askCalls++
+    },
+  })
+  try {
+    await officeTools.office_edit.execute(
+      {
+        file: path.join(FIXTURE_DIR, "report.docx"),
+        operations: [{ op: "replace_text", target: "p:0", anchor: "x" }],
+      } as never,
+      spyCtx,
+    )
+    expect.unreachable()
+  } catch (e) {
+    expect((e as OfficeError).code).toBe("BAD_ARGS")
+  }
+  expect(askCalls).toBe(0)
+})
+
 test("malformed target id fails BAD_ID before ask", async () => {
   let askCalls = 0
   const spyCtx = makeCtx({
@@ -160,6 +182,82 @@ test("office_create rejects an empty slides array with BAD_ARGS", async () => {
   } catch (e) {
     expect((e as OfficeError).code).toBe("BAD_ARGS")
   }
+})
+
+test("office_create rejects a slide spec with a non-string layout with BAD_ARGS before ask", async () => {
+  let askCalls = 0
+  const spyCtx = makeCtx({
+    ask: async () => {
+      askCalls++
+    },
+  })
+  try {
+    await officeTools.office_create.execute(
+      { file: path.join(FIXTURE_DIR, "plugin-new-deck.pptx"), slides: [{ layout: 5 }] } as never,
+      spyCtx,
+    )
+    expect.unreachable()
+  } catch (e) {
+    expect((e as OfficeError).code).toBe("BAD_ARGS")
+  }
+  expect(askCalls).toBe(0)
+})
+
+test("office_create rejects bullets given as a bare string (not an array) with BAD_ARGS before ask", async () => {
+  let askCalls = 0
+  const spyCtx = makeCtx({
+    ask: async () => {
+      askCalls++
+    },
+  })
+  try {
+    await officeTools.office_create.execute(
+      { file: path.join(FIXTURE_DIR, "plugin-new-deck.pptx"), slides: [{ layout: "Title and Content", bullets: "First point" }] } as never,
+      spyCtx,
+    )
+    expect.unreachable()
+  } catch (e) {
+    expect((e as OfficeError).code).toBe("BAD_ARGS")
+  }
+  expect(askCalls).toBe(0)
+})
+
+test("office_create rejects a non-string markdown for a .docx with BAD_ARGS before ask", async () => {
+  let askCalls = 0
+  const spyCtx = makeCtx({
+    ask: async () => {
+      askCalls++
+    },
+  })
+  try {
+    await officeTools.office_create.execute(
+      { file: path.join(FIXTURE_DIR, "plugin-new-summary.docx"), markdown: 123 } as never,
+      spyCtx,
+    )
+    expect.unreachable()
+  } catch (e) {
+    expect((e as OfficeError).code).toBe("BAD_ARGS")
+  }
+  expect(askCalls).toBe(0)
+})
+
+test("office_create rejects an empty-string markdown for a .docx with BAD_ARGS before ask", async () => {
+  let askCalls = 0
+  const spyCtx = makeCtx({
+    ask: async () => {
+      askCalls++
+    },
+  })
+  try {
+    await officeTools.office_create.execute(
+      { file: path.join(FIXTURE_DIR, "plugin-new-summary.docx"), markdown: "" } as never,
+      spyCtx,
+    )
+    expect.unreachable()
+  } catch (e) {
+    expect((e as OfficeError).code).toBe("BAD_ARGS")
+  }
+  expect(askCalls).toBe(0)
 })
 
 test("office_edit happy path on a work-copy docx applies and reports backup", async () => {
