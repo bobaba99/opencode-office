@@ -1,5 +1,6 @@
 from _worker import run, WorkerError
 from docx import Document
+from docx.oxml.ns import qn
 from _docx_common import iter_blocks, render_table
 
 
@@ -20,7 +21,21 @@ def main(payload):
             style = el.style.name if el.style is not None else "Normal"
             if mode == "outline" and not target and not style.startswith("Heading"):
                 continue
-            elements.append({"id": el_id, "type": "paragraph", "style": style, "text": el.text})
+            entry = {"id": el_id, "type": "paragraph", "style": style, "text": el.text}
+            if mode == "full":
+                ins_texts = [
+                    "".join(t.text or "" for t in ins.iter(qn("w:t")))
+                    for ins in el._p.iter(qn("w:ins"))
+                ]
+                del_texts = [
+                    "".join(t.text or "" for t in d.iter(qn("w:delText")))
+                    for d in el._p.iter(qn("w:del"))
+                ]
+                if ins_texts:
+                    entry["tracked_insertions"] = ins_texts
+                if del_texts:
+                    entry["tracked_deletions"] = del_texts
+            elements.append(entry)
         else:
             entry = {"id": el_id, "type": "table", "rows": len(el.rows), "cols": len(el.columns)}
             if mode != "outline":

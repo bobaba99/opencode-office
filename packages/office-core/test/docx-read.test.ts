@@ -76,3 +76,17 @@ test("outline mode still returns a targeted non-heading element", async () => {
   expect(out.elements).toHaveLength(1)
   expect(out.elements[0].id).toBe(bodyPara.id)
 })
+
+test("full mode surfaces tracked insertions; content mode does not", async () => {
+  const EDIT = path.join(FIXTURE_DIR, "edit-report.docx")
+  const full = await readDocx(EDIT, "full")
+  const tracked = full.elements.find(
+    (e) => e.type === "paragraph" && (e.tracked_insertions?.length ?? 0) > 0,
+  )!
+  expect(tracked.type === "paragraph" && tracked.tracked_insertions).toEqual(["with tracked insertion"])
+  expect(formatDocxRead(full)).toContain("tracked insertion:")
+  const content = await readDocx(EDIT, "content")
+  for (const el of content.elements) {
+    expect(el.type === "paragraph" ? (el as { tracked_insertions?: string[] }).tracked_insertions : undefined).toBeUndefined()
+  }
+})
