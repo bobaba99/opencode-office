@@ -1,0 +1,30 @@
+{
+  "model": "ollama/qwen3-coder:30b",
+  "startedAt": "2026-07-18T04:21:32.639Z",
+  "cards": {
+    "docx-replace": {
+      "success": false,
+      "fidelity": true,
+      "notes": [
+        "expected \"Growth was robust this quarter overall.\", found \"Growth was strong this quarter overall.\""
+      ],
+      "seconds": 55.32
+    },
+    "docx-insert": {
+      "success": false,
+      "fidelity": true,
+      "notes": [
+        "missing/out-of-order headings: Regional Breakdown@2 Next Steps@-1"
+      ],
+      "seconds": 26.707
+    },
+    "docx-table": {
+      "success": false,
+      "fidelity": true,
+      "notes": [
+        "cell(1,1) is \"$4.2M\", expected \"$5.1M\""
+      ],
+      "seconds": 27.382
+    }
+  }
+}

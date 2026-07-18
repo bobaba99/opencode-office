@@ -1,0 +1,61 @@
+{
+  "model": "opencode/nemotron-3-ultra-free",
+  "startedAt": "2026-07-18T04:23:35.641Z",
+  "cards": {
+    "docx-replace": {
+      "success": false,
+      "fidelity": false,
+      "notes": [
+        "expected \"Growth was robust this quarter overall.\", found null",
+        "could not locate the growth paragraph to probe comment refs"
+      ],
+      "seconds": 31.524
+    },
+    "docx-insert": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 62.482
+    },
+    "docx-table": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 25.008
+    },
+    "docx-create": {
+      "success": false,
+      "fidelity": true,
+      "notes": [
+        "could not read /tmp/office-eval/docx-create-1784348738544-c18927a9/summary.docx: Could not open /tmp/office-eval/docx-create-1784348738544-c18927a9/summary.docx as .docx: Package not found at '/tmp/office-eval/docx-create-1784348738544-c18927a9/summary.docx'"
+      ],
+      "seconds": 4.707
+    },
+    "pptx-retitle": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 25.563
+    },
+    "pptx-insert": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 33.192
+    },
+    "pptx-image": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 74.511
+    },
+    "pptx-create": {
+      "success": false,
+      "fidelity": true,
+      "notes": [
+        "could not read /tmp/office-eval/pptx-create-1784348881471-7e9be1a8/plan.pptx: Could not open /tmp/office-eval/pptx-create-1784348881471-7e9be1a8/plan.pptx as .pptx: Package not found at '/tmp/office-eval/pptx-create-1784348881471-7e9be1a8/plan.pptx'"
+      ],
+      "seconds": 6.854
+    }
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "model": "ollama/minimax-m3:cloud",
+  "startedAt": "2026-07-18T04:34:42.207Z",
+  "cards": {
+    "docx-replace": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 21.184
+    },
+    "docx-insert": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 18.593
+    },
+    "docx-table": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 37.273
+    },
+    "docx-create": {
+      "success": false,
+      "fidelity": true,
+      "notes": [
+        "could not read /tmp/office-eval/docx-create-1784350549191-011f5ecc/summary.docx: Could not open /tmp/office-eval/docx-create-1784350549191-011f5ecc/summary.docx as .docx: Package not found at '/tmp/office-eval/docx-create-1784350549191-011f5ecc/summary.docx'"
+      ],
+      "seconds": 6.863
+    },
+    "pptx-retitle": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 10.92
+    },
+    "pptx-insert": {
+      "success": false,
+      "fidelity": true,
+      "notes": [
+        "slide 1 layout/body mismatch: layout=Title and Content body=\"Agenda\\nitem\""
+      ],
+      "seconds": 22.119
+    },
+    "pptx-image": {
+      "success": false,
+      "fidelity": true,
+      "notes": [
+        "expected 4 slides, got 3",
+        "s:3/sh:0 sha mismatch: got undefined, expected 96ba6cc8dd122bb6a1269511a2c4276ea6e79ff5fc31622f30ded2b33cbd4413"
+      ],
+      "seconds": 10.297
+    },
+    "pptx-create": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 19.776
+    }
+  }
+}

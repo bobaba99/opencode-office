@@ -1,0 +1,54 @@
+{
+  "model": "ollama/qwen3.5:397b-cloud",
+  "startedAt": "2026-07-18T04:55:58.571Z",
+  "cards": {
+    "docx-replace": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 24.585
+    },
+    "docx-insert": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 24.046
+    },
+    "docx-table": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 33.053
+    },
+    "docx-create": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 20.476
+    },
+    "pptx-retitle": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 35.844
+    },
+    "pptx-insert": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 11.609
+    },
+    "pptx-image": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 12.248
+    },
+    "pptx-create": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 5.692
+    }
+  }
+}

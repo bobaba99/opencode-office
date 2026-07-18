@@ -1,0 +1,54 @@
+{
+  "model": "opencode/big-pickle",
+  "startedAt": "2026-07-18T04:09:26.236Z",
+  "cards": {
+    "docx-replace": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 38.534
+    },
+    "docx-insert": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 35.939
+    },
+    "docx-table": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 47.787
+    },
+    "docx-create": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 11.628
+    },
+    "pptx-retitle": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 29.338
+    },
+    "pptx-insert": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 17.971
+    },
+    "pptx-image": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 158.977
+    },
+    "pptx-create": {
+      "success": true,
+      "fidelity": true,
+      "notes": [],
+      "seconds": 11.424
+    }
+  }
+}
