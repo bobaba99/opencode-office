@@ -25,16 +25,18 @@ opencode and Bun do. Plain Node.js consumers are not supported for now.
 
 ## Install
 
-**From npm** (once published — this repo currently ships dry-run-verified packaging only, see
-[`docs/superpowers/plans`](docs/superpowers/plans) for status):
+**From npm:**
 
 ```sh
 bun add opencode-plugin-office
+# or: npm install opencode-plugin-office
 ```
 
-**From a local checkout / workspace** (the only path available today): install/link the package
-wherever `opencode.json` resolves it from — opencode loads plugins from `node_modules` or a
-workspace path.
+(Either package manager works for installing; the plugin executes inside opencode's Bun runtime
+either way.)
+
+**From a local checkout / workspace:** install/link the package wherever `opencode.json` resolves
+it from — opencode loads plugins from `node_modules` or a workspace path.
 
 Either way, reference the package by name in `opencode.json`:
 

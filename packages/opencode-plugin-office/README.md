@@ -11,10 +11,11 @@ the full operations catalog) and the underlying tool contracts.
 
 ## Install
 
-**From npm** (once published):
+**From npm:**
 
 ```sh
 bun add opencode-plugin-office
+# or: npm install opencode-plugin-office
 ```
 
 **From a local checkout / workspace** (the only path available today): install/link the package
