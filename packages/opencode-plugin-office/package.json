@@ -1,6 +1,6 @@
 {
   "name": "opencode-plugin-office",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "opencode plugin: office_read/office_edit/office_create/office_render/office_python tools for .docx/.pptx files, plus the office-tools skill.",
   "license": "MIT",
   "keywords": [
